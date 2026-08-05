@@ -638,7 +638,11 @@ input[readonly] {
     <!-- SECTION: Assignee -->
   <section class="section">
     <h2>Signature of Trustee(s)/Nominee(s)</h2>
- 
+  <div class="row">
+  <label style="flex:1">Name: 
+    <span id="Complx_Trustee_Name_Display" style="font-weight: 600;">-</span>
+  </label>
+  </div>
 
     <div class="sig-preview" id="preview_simple_assignee" onclick="openSig('simple_assignee')">
       <span>Tap to Sign (Trustee/Nominee)</span>
@@ -1010,6 +1014,61 @@ function saveToLocalStorage(id, value) {
     console.error('Failed to save to localStorage:', e);
   }
 }  
+
+/* ---------- Signature Names Display ---------- */
+document.addEventListener("DOMContentLoaded", () => {
+  const fieldMap = {
+    "Complx_PO_Name":  "Complx_PO_Name_Display",
+    "Complx_Witness_Name": "Complx_Witness_Name_Display",
+    "Complx_Trustee_Name": "Complx_Trustee_Name_Display",
+  };
+
+  function updateDisplay(storageKey, displayId, directValue = null) {
+    const displayEl = document.getElementById(displayId);
+    if (!displayEl) return;
+
+    const sourceInput = document.getElementById(storageKey);
+    
+    // Priority:
+    // 1. Direct typed value (if from live typing event)
+    // 2. localStorage value
+    // 3. Current input DOM value
+    const savedInStorage = localStorage.getItem(storageKey);
+    const inputVal = sourceInput ? sourceInput.value : "";
+    
+    const value = (directValue !== null) 
+      ? directValue 
+      : (savedInStorage || inputVal);
+
+    displayEl.textContent = value ? value.toUpperCase() : "-";
+  }
+
+  function refreshAllDisplays() {
+    Object.entries(fieldMap).forEach(([storageKey, displayId]) => {
+      updateDisplay(storageKey, displayId);
+    });
+  }
+
+  // Bind live typing listeners to inputs
+  Object.entries(fieldMap).forEach(([storageKey, displayId]) => {
+    const sourceInput = document.getElementById(storageKey);
+    if (sourceInput) {
+      sourceInput.addEventListener("input", (e) => {
+        updateDisplay(storageKey, displayId, e.target.value);
+      });
+      // Also listen for change/restore events
+      sourceInput.addEventListener("change", () => {
+        updateDisplay(storageKey, displayId);
+      });
+    }
+  });
+
+  // 1. Immediate update
+  refreshAllDisplays();
+
+  // 2. Delayed update (wait 100ms for autoBindSave / restoration script to finish putting localStorage values into the DOM inputs)
+  setTimeout(refreshAllDisplays, 100);
+});
 
 /* ---------- SIGNATURE MODAL LOGIC (Owner + Payor) with HiDPI scaling ---------- */
 let sigTarget = null;
