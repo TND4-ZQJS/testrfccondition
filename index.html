@@ -203,11 +203,24 @@ input[readonly] {
         <input id="Complx_Sign_Witness_Mobile" class="persist" type="text" placeholder="Enter mobile no.">
       </label>
     </div>
-
   </section>
   
+   <section class="section">
 
+    <h2>Trustee/Nominee Information</h2>
+     <div class="row">
+      <label style="flex:1">Name of Trustee/Nominee
+        <input id="Complx_Sign_Trustee_Name" class="persist" type="text" placeholder="Enter name">
+      </label>
+    </div>
+    <div class="row">
+    <label style="flex:1">IC No.
+        <input id="Complx_Sign_Trustee_NIRC" class="persist" type="text" placeholder="Enter NIRC no.">
+    </label>
+    </div>
+  
   </section>
+
 
 
  <!-- SECTION: User Options -->
@@ -591,6 +604,11 @@ input[readonly] {
   <!-- SECTION: Owner/Policyowner Signature -->
   <section class="section">
     <h2>Signature of Policy Owner/Assignee</h2>
+    <div class="row">
+  <label style="flex:1">Name: 
+    <span id="Complx_PO_Name_Display" style="font-weight: 600;">-</span>
+  </label>
+  </div>
 
         <div class="sig-preview" id="preview_simple_owner" onclick="openSig('simple_owner')">
       <span>Tap to Sign (Policyowner / Assignee)</span>
@@ -603,6 +621,11 @@ input[readonly] {
   <!-- SECTION: Witness Signature -->
   <section class="section">
     <h2>Signature of Witness</h2>
+        <div class="row">
+  <label style="flex:1">Name: 
+    <span id="Complx_Witness_Name_Display" style="font-weight: 600;">-</span>
+  </label>
+  </div>
 
     <div class="sig-preview" id="preview_simple_witness" onclick="openSig('simple_witness')">
       <span>Tap to Sign (Witness)</span>
@@ -615,17 +638,7 @@ input[readonly] {
     <!-- SECTION: Assignee -->
   <section class="section">
     <h2>Signature of Trustee(s)/Nominee(s)</h2>
-    <div class="row">
-      <label style="flex:1">Name of Trustee/Nominee
-        <input id="Complx_Sign_Trustee_Name" class="persist" type="text" placeholder="Enter name">
-      </label>
-    </div>
-    <div class="row">
-    <label style="flex:1">IC No.
-        <input id="Complx_Sign_Trustee_NIRC" class="persist" type="text" placeholder="Enter NIRC no.">
-    </label>
-    </div>
-
+ 
 
     <div class="sig-preview" id="preview_simple_assignee" onclick="openSig('simple_assignee')">
       <span>Tap to Sign (Trustee/Nominee)</span>
