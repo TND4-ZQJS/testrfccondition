@@ -853,6 +853,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const insuredPOCheckbox = document.getElementById("Complx_Insured_is_PO");
   const insuredName        = document.getElementById("Complx_Insured_Name");
+  const insuredNric        = document.getElementById("Complx_Insured_NIRC");
 
   // Helper to safely format value to Uppercase
   const toUpper = (val) => (val || "").toUpperCase();
@@ -876,19 +877,25 @@ document.addEventListener("DOMContentLoaded", () => {
 
   /* --- 2. INSURED SYNC (Conditional on Checkbox) --- */
   function syncInsuredFromPO() {
-    if (!insuredName || !poName) return;
-    setAndPersist(insuredName, toUpper(poName.value));
+    if (insuredName && poName) {
+      setAndPersist(insuredName, toUpper(poName.value));
+    }
+    if (insuredNric && poNric) {
+      setAndPersist(insuredNric, toUpper(poNric.value));
+    }
   }
 
   function clearInsuredFields() {
-    if (!insuredName) return;
-    clearAndRemovePersist(insuredName);
+    if (insuredName) clearAndRemovePersist(insuredName);
+    if (insuredNric) clearAndRemovePersist(insuredNric);
   }
 
   function setInsuredLocked(locked) {
-    if (!insuredName) return;
-    insuredName.readOnly = locked;
-    insuredName.classList.toggle("dimmed", locked);
+    [insuredName, insuredNric].forEach((el) => {
+      if (!el) return;
+      el.readOnly = locked;
+      el.classList.toggle("dimmed", locked);
+    });
   }
 
   function handleInsuredCheckboxChange() {
@@ -908,14 +915,15 @@ document.addEventListener("DOMContentLoaded", () => {
   // Live Sync on Policy Owner Typing
   if (poName) {
     poName.addEventListener("input", () => {
-      syncEBankFromPO();
+      if (typeof syncEBankFromPO === "function") syncEBankFromPO();
       if (insuredPOCheckbox && insuredPOCheckbox.checked) syncInsuredFromPO();
     });
   }
 
   if (poNric) {
     poNric.addEventListener("input", () => {
-      syncEBankFromPO();
+      if (typeof syncEBankFromPO === "function") syncEBankFromPO();
+      if (insuredPOCheckbox && insuredPOCheckbox.checked) syncInsuredFromPO();
     });
   }
 
@@ -926,7 +934,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Initial Sync on Page Load
   setTimeout(() => {
-    syncEBankFromPO();
+    if (typeof syncEBankFromPO === "function") syncEBankFromPO();
     // Only set lock state without clearing on page startup
     if (insuredPOCheckbox && insuredPOCheckbox.checked) {
       syncInsuredFromPO();
@@ -936,6 +944,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }, 50);
 });
+
 
 /* ---------- Date Set Today Button ---------- */  
 function setSignedDateToday() {
