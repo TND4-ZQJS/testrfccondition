@@ -848,11 +848,11 @@ function safeSetField(form, fieldName, value) {
 /* ---------- Combined PO -> E-Bank & PO -> Insured Sync Helper ---------- */
 document.addEventListener("DOMContentLoaded", () => {
   // Elements
-  const poName    = document.getElementById("GCPWD_PO_Name");
-  const poNric    = document.getElementById("GCPWD_PO_NIRC");
+  const poName    = document.getElementById("Complx_Sign_PO_Name");
+  const poNric    = document.getElementById("Complx_Sign_PO_NIRC");
 
-  const insuredPOCheckbox = document.getElementById("GCPWD_Insured_is_PO");
-  const insuredName        = document.getElementById("GCPWD_Insured_Name");
+  const insuredPOCheckbox = document.getElementById("Complx_Insured_is_PO");
+  const insuredName        = document.getElementById("Complx_Insured_Name");
 
   // Helper to safely format value to Uppercase
   const toUpper = (val) => (val || "").toUpperCase();
