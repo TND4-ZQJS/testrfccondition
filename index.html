@@ -166,15 +166,26 @@ input[readonly] {
 <main>
   <h1>Request For Change of Policy Condition (LF5189)</h1>
 
-  <!-- SECTION: Policy Info -->
+    <!-- Progress Tracker -->
+  <div class="step-indicator" id="stepIndicator">
+    <div class="step active"><span class="step-num">1</span>Policy</div>
+    <div class="step"><span class="step-num">2</span>Person</div>
+    <div class="step"><span class="step-num">3</span>Request Type</div>
+    <div class="step"><span class="step-num">6</span>Sign</div>
+    <div class="step"><span class="step-num">7</span>Generate</div>
+  </div>
+  <!-- (END) Progress Tracker -->
+
+  <div class="wizard-step active"><!-- STEP 1: Policy -->
   <section class="section">
     <h2>Policy Information</h2>
 
     <label>Policy No.
       <input id="Complx_PolicyNo" class="persist" type="text" placeholder="Enter policy no.">
     </label>
-  </section>
+  </section><!-- (END) STEP 1: Policy -->
 
+  <div class="wizard-step"> <!-- Step 2: Person details -->
   <section class="section">
     <h2>Policy Owner/Assignee Information</h2>
     <div class="row">
@@ -227,9 +238,9 @@ input[readonly] {
       </label>
     </div>
   </section>
-  
-   <section class="section">
 
+    
+   <section class="section">
     <h2>Trustee/Nominee Information</h2>
      <div class="row">
       <label style="flex:1">Name of Trustee/Nominee
@@ -243,9 +254,9 @@ input[readonly] {
     </div>
   
   </section>
+  </div><!-- (END) STEP 2: Person -->
 
-
-
+<div class="wizard-step"> <!-- Step 3: Request Type -->
  <!-- SECTION: User Options -->
   <section id="UserOption" class="section">
      <label>Choose one or more request <small class="muted">(only request that is "checked in the box" will appear)</small></label>
@@ -572,9 +583,10 @@ input[readonly] {
       <input id="Complx_Others_Line4" class="persist" type="text" placeholder="Line 4">
       </div>
   </section>
+  </div><!-- (END) STEP 3: Request Type -->
     
-    
-  <!-- SECTION: Signature Details (Date/Place) -->
+  
+  <div class="wizard-step"> <!-- Step 4: Sign -->
   <section class="section">
     <h2>Signature Details</h2>
     <div class="row">
@@ -693,7 +705,9 @@ input[readonly] {
     </div>
   </div>
 </div>
-    <div id="saveStatus">Saved</div>
+  </div> <!-- Step 4: Sign -->
+    
+  <div id="saveStatus">Saved</div>
 
 
   <button id="scrollTopBtn" onclick="scrollToTop()" aria-label="Back to top">
@@ -1521,6 +1535,72 @@ window.addEventListener("scroll", () => {
 function scrollToTop() {
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
+
+// WIZARD TRACKER LOGIC
+const steps = document.querySelectorAll(".wizard-step");
+const indicatorSteps = document.querySelectorAll(".step");
+const nextBtn = document.getElementById("nextBtn");
+const prevBtn = document.getElementById("prevBtn");
+
+// 1. Load saved step on startup (fallback to 0 if invalid or empty)
+const savedStep = parseInt(localStorage.getItem("wizardCurrentStep"), 10);
+let currentStep = (!isNaN(savedStep) && savedStep >= 0 && savedStep < steps.length) ? savedStep : 0;
+
+// 2. Initialize Click Events for the Progress Tracker
+indicatorSteps.forEach((stepCircle, index) => {
+  stepCircle.addEventListener("click", () => {
+    navigateTo(index);
+  });
+});
+
+// 3. Updated Navigation Function
+function navigateTo(index) {
+  // Clear 'active' from ALL steps & indicators to override hardcoded HTML
+  steps.forEach(step => step.classList.remove("active"));
+  indicatorSteps.forEach(ind => ind.classList.remove("active"));
+
+  // Update Index
+  currentStep = index;
+
+  // Persist current step to localStorage
+  localStorage.setItem("wizardCurrentStep", currentStep);
+
+  // Apply active class to current step
+  steps[currentStep].classList.add("active");
+  indicatorSteps[currentStep].classList.add("active");
+
+  // Handle "Previous" button visibility
+  if (prevBtn) prevBtn.style.visibility = (currentStep === 0) ? "hidden" : "visible";
+
+  // Handle "Next" button: Hide it completely on the final step
+  if (nextBtn) {
+    if (currentStep === steps.length - 1) {
+      nextBtn.style.display = "none";
+    } else {
+      nextBtn.style.display = "block";
+      nextBtn.innerText = "Next Step";
+    }
+  }
+
+  // Smooth scroll to top of the card
+  const mainContent = document.querySelector('main');
+  if (mainContent) mainContent.scrollIntoView({ behavior: 'smooth' });
+}
+
+// 4. Updated Next/Back logic
+function changeStep(n) {
+  let newStep = currentStep + n;
+  
+  // Only navigate if the step actually exists
+  if (newStep >= 0 && newStep < steps.length) {
+    navigateTo(newStep);
+  }
+}
+
+// 5. Force UI to match saved step as soon as DOM is ready
+document.addEventListener("DOMContentLoaded", () => {
+  navigateTo(currentStep);
+});
   
 </script>
 </main> 
