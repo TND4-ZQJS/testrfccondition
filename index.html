@@ -257,10 +257,11 @@ input[readonly] {
   </div><!-- (END) STEP 2: Person -->
 
 <div class="wizard-step"> <!-- Step 3: Request Type -->
- <!-- SECTION: User Options -->
-  <section id="UserOption" class="section">
-     <label>Choose one or more request <small class="muted">(only request that is "checked in the box" will appear)</small></label>
-    <div id="UserOption" class="grid-2">
+  
+  <!-- SECTION: User Options -->
+  <section id="UserOptionSection" class="section">
+    <label>Choose one or more request <small class="muted">(only request that is "checked in the box" will appear)</small></label>
+    <div id="UserOptionGrid" class="grid-2">
       <div>
         <label class="info-label"><input id="Updateoccupation" class="persist" type="checkbox">A. Review Occupation Rating/Change of Occupation</label>
       </div>
@@ -280,14 +281,13 @@ input[readonly] {
         <label class="info-label"><input id="ReduceFA" class="persist" type="checkbox">F. Reduction of Face Amount</label>
       </div>
       <div>
-        <label class="info-label"><input id="Cancelrider" class="persist" type="checkbox">G. Cancellation of Rider(s) </label>
+        <label class="info-label"><input id="Cancelrider" class="persist" type="checkbox">G. Cancellation of Rider(s)</label>
       </div>
       <div>
         <label class="info-label"><input id="Otherschangecondition" class="persist" type="checkbox">H. Others</label>
       </div>
     </div>
-</section>
-
+  </section>
 
   <!-- SECTION A: Update Occupation Rating -->
   <section class="section" id="UpdateoccupationSection">
@@ -300,13 +300,13 @@ input[readonly] {
       </label>
     </div>
 
-      <div class="row">
+    <div class="row">
       <label style="flex:1">Since - Month (MM)
-        <input id="Complx_Occupation_MM" class="persist" placeholder="MM" type="text" placeholder="MM" maxlength="2" inputmode="numeric" pattern="\d*">
+        <input id="Complx_Occupation_MM" class="persist" placeholder="MM" type="text" maxlength="2" inputmode="numeric" pattern="\d*">
       </label>
 
       <label style="flex:1">Since - Year (YYYY)
-        <input id="Complx_Occupation_YYYY" class="persist" placeholder="YYYY" type="text" placeholder="MM" maxlength="4" inputmode="numeric" pattern="\d*">
+        <input id="Complx_Occupation_YYYY" class="persist" placeholder="YYYY" type="text" maxlength="4" inputmode="numeric" pattern="\d*">
       </label>
     </div>
 
@@ -318,81 +318,86 @@ input[readonly] {
 
     <div class="row">
       <label style="flex:1">Nature of Business
-        <input id="Complx_Occupation_Nature" class="persist" type="text" placeholder="Enter occupation">
+        <input id="Complx_Occupation_Nature" class="persist" type="text" placeholder="Enter nature of business">
       </label>
     </div>
 
     <div class="row">
       <label style="flex:1">Exact Duties
-        <input id="Complx_Occupation_Duty" class="persist" type="text" placeholder="Enter occupation">
+        <input id="Complx_Occupation_Duty" class="persist" type="text" placeholder="Enter exact duties">
       </label>
     </div>
   </section>
 
-    <!-- SECTION B: Reduce Regular Premium -->
+  <!-- SECTION B: Reduce Regular Premium -->
   <section class="section" id="ReducepremiumSection">
     <h2>B. Reduction of Regular Premium</h2>
-    <div id="UserOption" class="grid-2">
+    <div class="grid-2">
       <div>
-        <label class="inline"><input id="Complx_ReducePremium_Basic_Yes" class="persist" type="checkbox">Reduce Basic Investment Premium to</label><small class="muted">RM per Annum</small><input id="Complx_ReducePremium_Basic_Amt" class="persist" type="text" placeholder="Enter amount (RM per annum)">
+        <label class="inline"><input id="Complx_ReducePremium_Basic_Yes" class="persist" type="checkbox">Reduce Basic Investment Premium to</label>
+        <small class="muted">RM per Annum</small>
+        <input id="Complx_ReducePremium_Basic_Amt" class="persist" type="text" placeholder="Enter amount (RM per annum)">
       </div>
       <div>
-        <label class="inline"><input id="Complx_ReducePremium_Topup_Yes" class="persist" type="checkbox">Reduce Regular Top Up Premium to</label><small class="muted">RM per Annum</small><input id="Complx_ReducePremium_Topup_Amt" class="persist" type="text" placeholder="Enter amount (RM per annum)">
+        <label class="inline"><input id="Complx_ReducePremium_Topup_Yes" class="persist" type="checkbox">Reduce Regular Top Up Premium to</label>
+        <small class="muted">RM per Annum</small>
+        <input id="Complx_ReducePremium_Topup_Amt" class="persist" type="text" placeholder="Enter amount (RM per annum)">
       </div>
     </div>
   </section>
 
-      <!-- SECTION C: Increase Face Amount -->
+  <!-- SECTION C: Increase Face Amount -->
   <section class="section" id="IncreaseFASection">
     <h2>C. Increase of Face Amount</h2>
- <div class="row">
-  <small class="muted">Important Note: Health Declaration for Change of Policy Condition Form (Form No. LF4066) would be required for increase of face amount, addition of rider(s), and review of medical rating or exclusion.</small>
- </div>
+    <div class="row">
+      <small class="muted">Important Note: Health Declaration for Change of Policy Condition Form (Form No. LF4066) would be required for increase of face amount, addition of rider(s), and review of medical rating or exclusion.</small>
+    </div>
     
-     <div class="row">
+    <div class="row">
       <label style="flex:1">
-        <input id="Complx_IncreaseFA_Basic_Yes" class="persist" type="checkbox">Increase Basic Plan Face Amount<input id="Complx_IncreaseFA_Basic" class="persist" type="text" placeholder="Enter face amount"><small class="muted">Not applicable for Traditional policy in force for more than One (1) year</small>
+        <input id="Complx_IncreaseFA_Basic_Yes" class="persist" type="checkbox">Increase Basic Plan Face Amount
+        <input id="Complx_IncreaseFA_Basic" class="persist" type="text" placeholder="Enter face amount">
+        <small class="muted">Not applicable for Traditional policy in force for more than One (1) year</small>
       </label>
     </div>
 
-      <div class="row">
+    <div class="row">
       <label style="flex:1">
         <input id="Complx_IncreaseFA_Rider_Yes" class="persist" type="checkbox">Increase Rider(s) Face Amount
       </label>
-     </div>
+    </div>
 
-    <section class="section">
-    <div class="grid-2">
-      <div>
-        <label class="inline">Rider(1) Name<input id="Complx_IncreaseFA_Rider1_Name" class="persist" name="Paymentmethodtype" type="text" placeholder="Enter rider name"></label>
-      </div>
-      <div>
-        <label class="inline">Increase Rider(1) Face Amount to<input id="Complx_IncreaseFA_Rider1_FA" class="persist" name="Paymentmethodtype" type="text" placeholder="Enter face amount"></label>
-      </div>
-    </section>
-
-    <section class="section">
-      <div class="grid-2">
-      <div>
-        <label class="inline">Rider(2) Name<input id="Complx_IncreaseFA_Rider2_Name" class="persist" name="Paymentmethodtype" type="text" placeholder="Enter rider name"></label>
-      </div>
-      <div>
-        <label class="inline">Increase Rider(2) Face Amount to<input id="Complx_IncreaseFA_Rider2_FA" class="persist" name="Paymentmethodtype" type="text" placeholder="Enter face amount"></label>
-      </div>
-      </div>
-    </section>
-
-    <section class="section">
+    <div class="section">
       <div class="grid-2">
         <div>
-        <label class="inline">Rider(3) Name<input id="Complx_IncreaseFA_Rider3_Name" class="persist" name="Paymentmethodtype" type="text" placeholder="Enter rider name"></label>
+          <label class="inline">Rider(1) Name<input id="Complx_IncreaseFA_Rider1_Name" class="persist" name="Paymentmethodtype" type="text" placeholder="Enter rider name"></label>
+        </div>
+        <div>
+          <label class="inline">Increase Rider(1) Face Amount to<input id="Complx_IncreaseFA_Rider1_FA" class="persist" name="Paymentmethodtype" type="text" placeholder="Enter face amount"></label>
+        </div>
       </div>
-      
-      <div>
-        <label class="inline">Increase Rider(3) Face Amount to<input id="Complx_IncreaseFA_Rider3_FA" class="persist" name="Paymentmethodtype" type="text" placeholder="Enter face amount"></label>
+    </div>
+
+    <div class="section">
+      <div class="grid-2">
+        <div>
+          <label class="inline">Rider(2) Name<input id="Complx_IncreaseFA_Rider2_Name" class="persist" name="Paymentmethodtype" type="text" placeholder="Enter rider name"></label>
+        </div>
+        <div>
+          <label class="inline">Increase Rider(2) Face Amount to<input id="Complx_IncreaseFA_Rider2_FA" class="persist" name="Paymentmethodtype" type="text" placeholder="Enter face amount"></label>
+        </div>
       </div>
+    </div>
+
+    <div class="section">
+      <div class="grid-2">
+        <div>
+          <label class="inline">Rider(3) Name<input id="Complx_IncreaseFA_Rider3_Name" class="persist" name="Paymentmethodtype" type="text" placeholder="Enter rider name"></label>
+        </div>
+        <div>
+          <label class="inline">Increase Rider(3) Face Amount to<input id="Complx_IncreaseFA_Rider3_FA" class="persist" name="Paymentmethodtype" type="text" placeholder="Enter face amount"></label>
+        </div>
       </div>
-    </section>
     </div>
   </section>
   
@@ -401,78 +406,72 @@ input[readonly] {
     <h2>D. Additional of Rider(s)</h2>
 
     <div class="row">
-  <small class="muted">Important Note: Health Declaration for Change of Policy Condition Form (Form No. LF4066) would be required for increase of face amount, addition of rider(s), and review of medical rating or exclusion.</small>
- </div>
+      <small class="muted">Important Note: Health Declaration for Change of Policy Condition Form (Form No. LF4066) would be required for increase of face amount, addition of rider(s), and review of medical rating or exclusion.</small>
+    </div>
     
-  <div class="row">
+    <div class="row">
       <label style="flex:1">
         <input id="Complx_AddRider_Yes" class="persist" type="checkbox">Add Rider(s)
       </label>
-     </div>
+    </div>
 
-    <section class="section">
-    <div class="grid-3">
-      <div>
-        <label class="inline">Rider(1) Name<input id="Complx_AddRider1_Name" class="persist" name="Paymentmethodtype" type="text" placeholder="Enter rider name"></label>
-      </div>
-      
-      <div>
-        <label class="inline">Term (if applicable)<input id="Complx_AddRider1_Term" class="persist" name="Paymentmethodtype" type="text" placeholder="Enter term"></label>
-      </div>
-
-      <div>
-        <label class="inline">Face Amount<input id="Complx_AddRider1_FA" class="persist" name="Paymentmethodtype" type="text" placeholder="Enter face amount"></label>
+    <div class="section">
+      <div class="grid-3">
+        <div>
+          <label class="inline">Rider(1) Name<input id="Complx_AddRider1_Name" class="persist" name="Paymentmethodtype" type="text" placeholder="Enter rider name"></label>
+        </div>
+        <div>
+          <label class="inline">Term (if applicable)<input id="Complx_AddRider1_Term" class="persist" name="Paymentmethodtype" type="text" placeholder="Enter term"></label>
+        </div>
+        <div>
+          <label class="inline">Face Amount<input id="Complx_AddRider1_FA" class="persist" name="Paymentmethodtype" type="text" placeholder="Enter face amount"></label>
+        </div>
       </div>
     </div>
-    </section>
       
-    <section class="section">
-    <div class="grid-3">
-      <div>
-        <label class="inline">Rider(2) Name<input id="Complx_AddRider2_Name" class="persist" name="Paymentmethodtype" type="text" placeholder="Enter rider name"></label>
-      </div>
-      
-      <div>
-        <label class="inline">Term (if applicable)<input id="Complx_AddRider2_Term" class="persist" name="Paymentmethodtype" type="text" placeholder="Enter term"></label>
-      </div>
-
-      <div>
-        <label class="inline">Face Amount<input id="Complx_AddRider2_FA" class="persist" name="Paymentmethodtype" type="text" placeholder="Enter face amount"></label>
+    <div class="section">
+      <div class="grid-3">
+        <div>
+          <label class="inline">Rider(2) Name<input id="Complx_AddRider2_Name" class="persist" name="Paymentmethodtype" type="text" placeholder="Enter rider name"></label>
+        </div>
+        <div>
+          <label class="inline">Term (if applicable)<input id="Complx_AddRider2_Term" class="persist" name="Paymentmethodtype" type="text" placeholder="Enter term"></label>
+        </div>
+        <div>
+          <label class="inline">Face Amount<input id="Complx_AddRider2_FA" class="persist" name="Paymentmethodtype" type="text" placeholder="Enter face amount"></label>
+        </div>
       </div>
     </div>
-    </section>
 
-        <section class="section">
-    <div class="grid-3">
-      <div>
-        <label class="inline">Rider(3) Name<input id="Complx_AddRider3_Name" class="persist" name="Paymentmethodtype" type="text" placeholder="Enter rider name"></label>
-      </div>
-      
-      <div>
-        <label class="inline">Term (if applicable)<input id="Complx_AddRider3_Term" class="persist" name="Paymentmethodtype" type="text" placeholder="Enter term"></label>
-      </div>
-
-      <div>
-        <label class="inline">Face Amount<input id="Complx_AddRider3_FA" class="persist" name="Paymentmethodtype" type="text" placeholder="Enter face amount"></label>
+    <div class="section">
+      <div class="grid-3">
+        <div>
+          <label class="inline">Rider(3) Name<input id="Complx_AddRider3_Name" class="persist" name="Paymentmethodtype" type="text" placeholder="Enter rider name"></label>
+        </div>
+        <div>
+          <label class="inline">Term (if applicable)<input id="Complx_AddRider3_Term" class="persist" name="Paymentmethodtype" type="text" placeholder="Enter term"></label>
+        </div>
+        <div>
+          <label class="inline">Face Amount<input id="Complx_AddRider3_FA" class="persist" name="Paymentmethodtype" type="text" placeholder="Enter face amount"></label>
+        </div>
       </div>
     </div>
-    </section>
   </section>
 
-  <!-- SECTION: Review Medical Rating/Exclusion -->
+  <!-- SECTION E: Review Medical Rating/Exclusion -->
   <section class="section" id="ReviewmedratingSection">
     <h2>E. Review of Medical Rating or Exclusion</h2>
 
     <div class="row">
-  <small class="muted"> Please furnish a copy of existing medical reports ( if any ).Further medical requirement maybe required.</small>
- </div>
+      <small class="muted">Please furnish a copy of existing medical reports (if any). Further medical requirement maybe required.</small>
+    </div>
     
     <div class="grid-2">
       <div>
         <label class="inline"><input id="Complx_Review_Rating" class="persist" name="Paymentmethodtype" type="checkbox">Medical Rating</label>
       </div>
       <div>
-         <label class="inline"><input id="Complx_Review_Exclusion" class="persist" name="Paymentmethodtype" type="checkbox">Exclusion</label>
+        <label class="inline"><input id="Complx_Review_Exclusion" class="persist" name="Paymentmethodtype" type="checkbox">Exclusion</label>
       </div>
     </div>
   </section>
@@ -480,69 +479,68 @@ input[readonly] {
   <!-- SECTION F: Reduce Face Amount -->
   <section class="section" id="ReduceFASection">
     <h2>F. Reduction of Face Amount</h2>
- <div class="row">
-  <small class="muted">The trust nominees’ (under Schedule 10 [Section 130] of the Financial Services Act 2013) consent is required if there is no trustee being appointed for the request of reduction of face amount and cancellation of rider(s).</small>
- </div>
+    <div class="row">
+      <small class="muted">The trust nominees’ (under Schedule 10 [Section 130] of the Financial Services Act 2013) consent is required if there is no trustee being appointed for the request of reduction of face amount and cancellation of rider(s).</small>
+    </div>
     
-     <div class="row">
+    <div class="row">
       <label style="flex:1">
         <input id="Complx_ReduceFA_Basic_Yes" class="persist" type="checkbox">Reduce Basic Plan Face Amount<input id="Complx_ReduceFA_Basic_Amt" class="persist" type="text" placeholder="Enter face amount">
       </label>
     </div>
 
-      <div class="row">
+    <div class="row">
       <label style="flex:1">
         <input id="Complx_ReduceFA_Rider_Yes" class="persist" type="checkbox">Reduce Rider(s) Face Amount
       </label>
-     </div>
+    </div>
 
-    <section class="section">
-    <div class="grid-2">
-      <div>
-        <label class="inline">Rider(1) Name<input id="Complx_ReduceFA_Rider_Name1" class="persist" name="Paymentmethodtype" type="text" placeholder="Enter rider name"></label>
-      </div>
-      <div>
-        <label class="inline">Reduce Rider(1) Face Amount to<input id="Complx_ReduceFA_Rider1_FA1" class="persist" name="Paymentmethodtype" type="text" placeholder="Enter face amount"></label>
-      </div>
-    </section>
-
-    <section class="section">
-      <div class="grid-2">
-      <div>
-        <label class="inline">Rider(2) Name<input id="Complx_ReduceFA_Rider1_Name2" class="persist" name="Paymentmethodtype" type="text" placeholder="Enter rider name"></label>
-      </div>
-      <div>
-        <label class="inline">Reduce Rider(2) Face Amount to<input id="Complx_ReduceFA_Rider1_FA2" class="persist" name="Paymentmethodtype" type="text" placeholder="Enter face amount"></label>
-      </div>
-      </div>
-    </section>
-
-    <section class="section">
+    <div class="section">
       <div class="grid-2">
         <div>
-        <label class="inline">Rider(3) Name<input id="Complx_ReduceFA_Rider1_Name3" class="persist" name="Paymentmethodtype" type="text" placeholder="Enter rider name"></label>
+          <label class="inline">Rider(1) Name<input id="Complx_ReduceFA_Rider_Name1" class="persist" name="Paymentmethodtype" type="text" placeholder="Enter rider name"></label>
+        </div>
+        <div>
+          <label class="inline">Reduce Rider(1) Face Amount to<input id="Complx_ReduceFA_Rider_FA1" class="persist" name="Paymentmethodtype" type="text" placeholder="Enter face amount"></label>
+        </div>
       </div>
-      
-      <div>
-        <label class="inline">Reduce Rider(3) Face Amount to<input id="Complx_ReduceFA_Rider1_FA3" class="persist" name="Paymentmethodtype" type="text" placeholder="Enter face amount"></label>
+    </div>
+
+    <div class="section">
+      <div class="grid-2">
+        <div>
+          <label class="inline">Rider(2) Name<input id="Complx_ReduceFA_Rider_Name2" class="persist" name="Paymentmethodtype" type="text" placeholder="Enter rider name"></label>
+        </div>
+        <div>
+          <label class="inline">Reduce Rider(2) Face Amount to<input id="Complx_ReduceFA_Rider_FA2" class="persist" name="Paymentmethodtype" type="text" placeholder="Enter face amount"></label>
+        </div>
       </div>
+    </div>
+
+    <div class="section">
+      <div class="grid-2">
+        <div>
+          <label class="inline">Rider(3) Name<input id="Complx_ReduceFA_Rider_Name3" class="persist" name="Paymentmethodtype" type="text" placeholder="Enter rider name"></label>
+        </div>
+        <div>
+          <label class="inline">Reduce Rider(3) Face Amount to<input id="Complx_ReduceFA_Rider_FA3" class="persist" name="Paymentmethodtype" type="text" placeholder="Enter face amount"></label>
+        </div>
       </div>
-    </section>
     </div>
   </section>
 
-   <!-- SECTION G: Cancellation of Rider -->
-      <section class="section" id="CancelriderSection">
-  <h2>G. Cancellation of Rider(s)</h2>
-       <div class="row">
-       <small class="muted">The trust nominees’ (under Schedule 10 [Section 130] of the Financial Services Act 2013) consent is required if there is no trustee being appointed for the request of reduction of face amount and cancellation of rider(s).</small>
-       </div>
+  <!-- SECTION G: Cancellation of Rider -->
+  <section class="section" id="CancelriderSection">
+    <h2>G. Cancellation of Rider(s)</h2>
+    <div class="row">
+      <small class="muted">The trust nominees’ (under Schedule 10 [Section 130] of the Financial Services Act 2013) consent is required if there is no trustee being appointed for the request of reduction of face amount and cancellation of rider(s).</small>
+    </div>
 
-     <div class="row">
-        <label style="flex:1">
+    <div class="row">
+      <label style="flex:1">
         <input id="Complx_CancelRider_Yes" class="persist" type="checkbox">Cancel Rider(s)
       </label>
-     </div>
+    </div>
         
     <div class="grid-2">
       <div>
@@ -551,39 +549,40 @@ input[readonly] {
       <div>
         <label class="inline">Cancel Rider(2) Name<input id="Complx_CancelRider_Name2" class="persist" name="Paymentmethodtype" type="text" placeholder="Enter rider name"></label>
       </div>
-       <div>
+      <div>
         <label class="inline">Cancel Rider(3) Name<input id="Complx_CancelRider_Name3" class="persist" name="Paymentmethodtype" type="text" placeholder="Enter rider name"></label>
       </div>
       <div>
-        <label class="inline">Cancel Rider(4) Name<input id="SComplx_CancelRider_Name4" class="persist" name="Paymentmethodtype" type="text" placeholder="Enter rider name"></label>
+        <label class="inline">Cancel Rider(4) Name<input id="Complx_CancelRider_Name4" class="persist" name="Paymentmethodtype" type="text" placeholder="Enter rider name"></label>
       </div>
-       <div>
+      <div>
         <label class="inline">Cancel Rider(5) Name<input id="Complx_CancelRider_Name5" class="persist" name="Paymentmethodtype" type="text" placeholder="Enter rider name"></label>
       </div>
       <div>
         <label class="inline">Cancel Rider(6) Name<input id="Complx_CancelRider_Name6" class="persist" name="Paymentmethodtype" type="text" placeholder="Enter rider name"></label>
       </div>
-    </section>
+    </div>
+  </section>
 
-
-
-   <!-- SECTION: Others -->
+  <!-- SECTION H: Others -->
   <section class="section" id="OtherschangeconditionSection">
-    <h2>E. Others</h2>
+    <h2>H. Others</h2>
     <div class="row">
       <input id="Complx_Others_Line1" class="persist" type="text" placeholder="Line 1">
-      </div>
-      <div class="row">
+    </div>
+    <div class="row">
       <input id="Complx_Others_Line2" class="persist" type="text" placeholder="Line 2">
-      </div>
-      <div class="row">
+    </div>
+    <div class="row">
       <input id="Complx_Others_Line3" class="persist" type="text" placeholder="Line 3">
-      </div>
-      <div class="row">
+    </div>
+    <div class="row">
       <input id="Complx_Others_Line4" class="persist" type="text" placeholder="Line 4">
-      </div>
+    </div>
   </section>
-  </div><!-- (END) STEP 3: Request Type -->
+
+</div><!-- (END) STEP 3: Request Type -->
+
     
   
   <div class="wizard-step"> <!-- Step 4: Sign -->
