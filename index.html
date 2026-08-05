@@ -102,6 +102,107 @@ input[readonly] {
   border-radius: 6px;
 }   
 
+
+  /* Generate PDF Page */
+  .action-center {max-width: 800px;margin: 40px auto;padding: 0 20px;box-sizing: border-box;}
+  .pdf-grid {display: flex;flex-direction: column;gap: 12px;}
+  .doc-row {display: flex;align-items: center;justify-content: space-between;background: #ffffff;padding: 16px;border-radius: 14px;border: 1px solid #d2d2d7box-sizing: border-box;}
+
+.doc-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.doc-title { 
+  font-size: 15px; 
+  color: #1d1d1f; 
+}
+
+.doc-sub { 
+  font-size: 12px; 
+  color: #86868b; 
+}
+
+/* Generate PDF Button Styles - Fixed Font & Padding matching Parent */
+.btn-primary,
+.btn-secondary {
+  font-family: inherit;
+  font-size: 1rem;       /* Restores 16px text scale from parent filler */
+  padding: 10px 18px;    /* Restores full padding size */
+  border-radius: 18px;
+  font-weight: 500;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.btn-primary { 
+  background: #0071e3; 
+  color: #fff; 
+  border: none; 
+}
+
+.btn-secondary { 
+  background: #f5f5f7; 
+  color: #0071e3; 
+  border: none; 
+  margin-right: 4px; 
+}
+
+.btn-secondary:focus {
+  outline: none;
+  background: #f5f5f7;
+  color: #0071e3;
+}
+
+.btn-secondary:hover {
+  background: #ebebed;
+}
+
+.btn-secondary:active {
+  background: #e8e8ed; 
+  transition: 0.1s;
+}
+
+.reset-container {
+  text-align: center;
+  margin-top: 40px;
+  padding-top: 20px;
+  border-top: 1px solid #d2d2d7;
+}
+
+.btn-reset { 
+  font-family: inherit;
+  font-size: 1rem;
+  background: none; 
+  color: #ff3b30; 
+  border: 1px solid #ff3b30; 
+  padding: 12px 24px; 
+  border-radius: 22px; 
+  font-weight: 600; 
+  cursor: pointer; 
+  transition: 0.2s; 
+  width: 100%; 
+  max-width: 300px; 
+}
+
+/* MOBILE ALIGNMENT FIX */
+@media (max-width: 600px) {
+  .doc-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+  .actions {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+  }
+  .actions button {
+    flex: 1;
+    text-align: center;
+  }
+}
+
    /* ---------- WIZARD CSS ---------- */ 
   /* Progress Tracker Container */
 .step-indicator {display: flex;justify-content: space-between;margin-bottom: 30px;background: #fff;padding: 15px;border-radius: 12px;border: 1px solid var(--line);overflow-x: auto;gap: 10px;}
@@ -706,7 +807,41 @@ input[readonly] {
   </div>
 </div>
   </div> <!-- Step 4: Sign -->
+
+<div class="wizard-step"><!-- Step 5: Generate -->
+<section class="section">
+  <h2>Generate PDF / Reset Form</h2>
+  <div class="action-center">
     
+    <!-- Restored pdf-grid wrapper here -->
+    <div class="pdf-grid">
+      <div class="doc-row">
+        <div class="doc-info">
+          <b class="doc-title">Application for Fund Withdrawal</b>
+          <span class="doc-sub">LF1050 · 3 Pages (email to myben@manulife.my )</span>
+        </div>
+        <div class="actions">
+          <button onclick="fillPDF('Application for Fund Withdrawal_LF1050_fillable.pdf', 'view')" class="btn-secondary">View</button>
+          <button onclick="fillPDF('Application for Fund Withdrawal_LF1050_fillable.pdf', 'download')" class="btn-primary">Download</button>
+        </div>
+      </div>
+    </div> <!-- Close pdf-grid -->
+
+    <div class="reset-container">
+      <button onclick="resetAllData()" class="btn-reset">Reset All Fields & Signatures</button>
+    </div>
+
+  </div> <!-- Close action-center -->
+</section>
+</div><!-- (END) STEP 5: Generate -->
+
+  <!-- NAVIGATION BUTTONS -->
+    <div class="wizard-actions">
+      <button type="button" id="prevBtn" class="ghost" onclick="changeStep(-1)" style="visibility:hidden;">Previous</button>
+      <button type="button" id="nextBtn" onclick="changeStep(1)">Next Step</button>
+    </div>
+
+  
   <div id="saveStatus">Saved</div>
 
 
