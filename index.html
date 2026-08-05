@@ -845,6 +845,97 @@ function safeSetField(form, fieldName, value) {
   }
 }
 
+/* ---------- Combined PO -> E-Bank & PO -> Insured Sync Helper ---------- */
+document.addEventListener("DOMContentLoaded", () => {
+  // Elements
+  const poName    = document.getElementById("GCPWD_PO_Name");
+  const poNric    = document.getElementById("GCPWD_PO_NIRC");
+
+  const insuredPOCheckbox = document.getElementById("GCPWD_Insured_is_PO");
+  const insuredName        = document.getElementById("GCPWD_Insured_Name");
+
+  // Helper to safely format value to Uppercase
+  const toUpper = (val) => (val || "").toUpperCase();
+
+  // Helper to update field + localStorage + save status
+  function setAndPersist(el, value) {
+    if (!el) return;
+    el.value = value;
+    localStorage.setItem(el.id, value);
+    if (typeof showSaveStatus === "function") showSaveStatus();
+  }
+
+  // Helper to clear field + remove from localStorage + save status
+  function clearAndRemovePersist(el) {
+    if (!el) return;
+    el.value = "";
+    localStorage.removeItem(el.id);
+    if (typeof showSaveStatus === "function") showSaveStatus();
+  }
+
+
+  /* --- 2. INSURED SYNC (Conditional on Checkbox) --- */
+  function syncInsuredFromPO() {
+    if (!insuredName || !poName) return;
+    setAndPersist(insuredName, toUpper(poName.value));
+  }
+
+  function clearInsuredFields() {
+    if (!insuredName) return;
+    clearAndRemovePersist(insuredName);
+  }
+
+  function setInsuredLocked(locked) {
+    if (!insuredName) return;
+    insuredName.readOnly = locked;
+    insuredName.classList.toggle("dimmed", locked);
+  }
+
+  function handleInsuredCheckboxChange() {
+    if (!insuredPOCheckbox) return;
+    
+    if (insuredPOCheckbox.checked) {
+      syncInsuredFromPO();
+      setInsuredLocked(true);
+    } else {
+      // Clear data & remove from localStorage when unchecked
+      clearInsuredFields();
+      setInsuredLocked(false);
+    }
+  }
+
+  /* --- 3. EVENT BINDINGS & INITIALIZATION --- */
+  // Live Sync on Policy Owner Typing
+  if (poName) {
+    poName.addEventListener("input", () => {
+      syncEBankFromPO();
+      if (insuredPOCheckbox && insuredPOCheckbox.checked) syncInsuredFromPO();
+    });
+  }
+
+  if (poNric) {
+    poNric.addEventListener("input", () => {
+      syncEBankFromPO();
+    });
+  }
+
+  // Checkbox Event Listener
+  if (insuredPOCheckbox) {
+    insuredPOCheckbox.addEventListener("change", handleInsuredCheckboxChange);
+  }
+
+  // Initial Sync on Page Load
+  setTimeout(() => {
+    syncEBankFromPO();
+    // Only set lock state without clearing on page startup
+    if (insuredPOCheckbox && insuredPOCheckbox.checked) {
+      syncInsuredFromPO();
+      setInsuredLocked(true);
+    } else {
+      setInsuredLocked(false);
+    }
+  }, 50);
+});
 
 /* ---------- Date Set Today Button ---------- */  
 function setSignedDateToday() {
