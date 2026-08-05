@@ -845,29 +845,6 @@ function safeSetField(form, fieldName, value) {
   }
 }
 
-// AUTO FILL INSURED NAME
-document.getElementById('same_as_insured').addEventListener('change', function() {
-    const insuredName = document.getElementById('Complx_Insured_Name');
-     const insuredIC = document.getElementById('Complx_Insured_NIRC');
-    const poName = document.getElementById('Complx_Sign_PO_Name');
-    const poIC = document.getElementById('Complx_Sign_PO_NIRC');
-
-        if (this.checked) {
-        poName.value = insuredName.value;
-        poIC.value = insuredIC.value;
-        poName.readOnly = true;
-        poIC.readOnly = true;
-    } else {
-        poName.value = "";
-        poIC.value = "";
-        poName.readOnly = false;
-        poIC.readOnly = false;
-    }
-
-    // Force the persistence script to save the changes (even the cleared ones)
-    poName.dispatchEvent(new Event('input', { bubbles: true }));
-    poIC.dispatchEvent(new Event('input', { bubbles: true }));
-});
 
 /* ---------- Date Set Today Button ---------- */  
 function setSignedDateToday() {
