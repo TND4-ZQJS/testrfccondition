@@ -2,16 +2,60 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<title>Request For Change of Policy Condition</title>
+<title>Magic Filler - CI Pro Universen</title>
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <style>
-  :root{
-    --bg:#f6f7f9; --card:#fff; --accent:#007aff; --muted:#666; --line:#e9e9ee;
-  }
-  *{box-sizing:border-box}
-  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial;margin:18px;background:var(--bg);color:#111}
-  main{max-width:980px;margin:0 auto;background:var(--card);padding:18px;border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,0.06)}
-  h1{margin:15px 0 35px 0;font-size:1.50rem}
+/* ============================================================
+    GLOBAL DESIGN VARIABLES (Unified Workspace Framework)
+   ============================================================ */
+*, *::before, *::after {box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+    --nav-height: 52px;
+    --accent: #0071e3;
+    --bg: #f5f5f7;       /* Clean gray workspace canvas background */
+    --surface: #ffffff;  /* Card surface background */
+    --text-primary: #1d1d1f;
+    --text-secondary: #515154;
+    --text-tertiary: #86868b;
+    --border: rgba(0, 0, 0, 0.06);
+    --line: #e9e9ee;
+}
+body {background-color: var(--bg); color: var(--text-primary);font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;-webkit-font-smoothing: antialiased;line-height: 1.5;}
+.container {max-width: 940px;margin: 40px auto;padding: 0 24px 20px;}
+
+/* ============================================================
+    STICKY STYLISH NAVBAR STRUCTURE
+   ============================================================ */
+.navbar {position: sticky;top: 0;z-index: 100;background: rgba(255, 255, 255, 0.85);backdrop-filter: blur(20px);-webkit-backdrop-filter: blur(20px);border-bottom: 1px solid var(--border);height: var(--nav-height);}
+.nav-container {max-width: 940px;margin: 0 auto;padding: 0 24px;height: 100%;display: flex;align-items: center;gap: 32px;}
+.logo {font-size: 16px;font-weight: 700;color: var(--text-primary);cursor: pointer;letter-spacing: -0.02em;flex-shrink: 0;}
+.nav-menu {display: flex;gap: 4px;align-items: center;margin-left: auto;}
+.nav-item {font-size: 13px;font-weight: 500;color: var(--text-secondary);text-decoration: none;padding: 6px 12px;border-radius: 8px;transition: background 0.15s, color 0.15s;white-space: nowrap;}
+.nav-item:hover { background: rgba(0,0,0,0.05); color: var(--text-primary); }
+.nav-item.active { background: rgba(0,113,227,0.08); color: var(--accent); }
+.menu-toggle {display: none;flex-direction: column;gap: 5px;cursor: pointer;margin-left: auto;padding: 6px;}
+.menu-toggle span {display: block;width: 22px;height: 2px;background: var(--text-primary);border-radius: 2px;transition: 0.3s;}
+@media (max-width: 700px) {.menu-toggle { display: flex; }
+       .nav-menu {display: none;position: absolute;top: var(--nav-height);left: 0; right: 0;background: rgba(255,255,255,0.97);backdrop-filter: blur(20px);flex-direction: column;padding: 12px 16px 20px;gap: 2px;border-bottom: 1px solid var(--border);}
+       .nav-menu.show { display: flex; }
+       .nav-item { width: 100%; padding: 10px 14px; }}
+
+/* Security Box */
+.security {padding: 60px 0;}
+.security-box {background-color: transparent;border-left: 3px solid #86868b;padding: 16px 24px;font-size: 14px;color: #6e6e73;}        
+
+/* Footer */
+.footer {padding: 40px 24px;text-align: center;font-size: 12px;color: #86868b;border-top: 1px solid #e8e8ed;}    
+
+/* Hero Section */
+.hero {padding-top: 140px;padding-bottom: 80px;text-align: center;}
+.badge {font-size: 20px;font-weight: 600;color: #bf4800;text-transform: uppercase;letter-spacing: 0.05em;display: block;margin-bottom: 12px;}
+.hero h1 {font-size: 48px;font-weight: 700;letter-spacing: -0.03em;line-height: 1.1;margin-bottom: 16px;color: #1d1d1f;}
+.subtitle {font-size: 19px;color: #86868b;max-width: 640px;margin: 0 auto;font-weight: 400;letter-spacing: -0.01em;}   
+  
+  /* ============================================================
+    FILLER WORKSPACE COMPONENT STYLES
+   ============================================================ */  
   .section{background:#fbfbfd;border:1px solid #eee;padding:14px;border-radius:10px;margin:12px 0}
   .section h2{margin:0 0 10px 0;font-size:1.05rem}
   label{display:block;margin:8px 0;font-size:0.95rem}
@@ -264,8 +308,40 @@ input[readonly] {
 </style>
 </head>
 <body>
-<main>
-  <h1>Request For Change of Policy Condition (LF5189)</h1>
+  <!-- Global Navigation Header -->
+    <header class="navbar">
+        <div class="nav-container">
+            <span class="logo" onclick="window.location.href='dashboard.html'">CI Pro Universe</span>
+
+            <!-- JavaScript Mobile Opener Hook -->
+            <div class="menu-toggle" onclick="toggleMobileMenu()" aria-label="Toggle menu">
+                <span></span><span></span><span></span>
+            </div>
+
+            <nav class="nav-menu" id="navMenu">
+                <a href="dashboard.html" class="nav-item">Operational Hub</a>
+                <a href="cipro-experience.html" class="nav-item">CI Pro Experience</a>
+                <a href="eposbuddy.html" class="nav-item">EPOS Buddy</a>
+                <a href="magicfiller.html" class="nav-item active">Magic Filler</a>
+            </nav>
+        </div>
+    </header>  
+
+    <!-- Back Button -->
+    <div class="back-navigation-container">
+    <a href="#" id="backToMainLink" class="back-link" aria-label="Go back to previous page" role="button">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
+        <span>Back</span>
+    </a>
+</div>
+  
+<main class="container">
+   <section class="hero" style="padding-top: 0px; padding-bottom: 20px; text-align: left;">
+            <span class="badge">Request For Change of Policy Conditio</span>
+    </section>
+
 
     <!-- Progress Tracker -->
   <div class="step-indicator" id="stepIndicator">
@@ -788,19 +864,6 @@ input[readonly] {
     </div>
   </section>
 
-  
-    <div id="sigModal" class="sig-modal" aria-hidden="true">
-  <div class="box">
-    <h3 id="sigModalTitle">Draw Signature</h3>
-    <!-- Responsive canvas: internal pixels are set in JS for crispness -->
-    <canvas id="sigCanvas"></canvas>
-    <div class="sig-actions">
-      <button id="sigDone" type="button">Done</button>
-      <button id="sigClear" type="button" class="ghost">Clear</button>
-      <button id="sigCancel" type="button" class="secondary">Cancel</button>
-    </div>
-  </div>
-</div>
   </div> <!-- Step 4: Sign -->
 
 <div class="wizard-step"><!-- Step 5: Generate -->
@@ -836,15 +899,33 @@ input[readonly] {
       <button type="button" id="nextBtn" onclick="changeStep(1)">Next Step</button>
     </div>
 
+    <!-- Security Statement -->
+      <section class="security" style="padding: 0 0 60px 0;">
+            <div class="security-box">
+                <strong>Secured Session Active:</strong> This platform operates on a static, local-injection framework. We do not store, log, or track any personal details or financial credentials on external servers.
+            </div>
+    </section>  
+
+  </main> 
+
+    <footer class="footer">
+        &copy; 2026 CI Pro Universe Portal. All rights reserved. Built for CI Pro operations.
+    </footer>   
+  
+    <div id="sigModal" class="sig-modal" aria-hidden="true">
+  <div class="box">
+    <h3 id="sigModalTitle">Draw Signature</h3>
+    <!-- Responsive canvas: internal pixels are set in JS for crispness -->
+    <canvas id="sigCanvas"></canvas>
+    <div class="sig-actions">
+      <button id="sigDone" type="button">Done</button>
+      <button id="sigClear" type="button" class="ghost">Clear</button>
+      <button id="sigCancel" type="button" class="secondary">Cancel</button>
+    </div>
+  </div>
+</div>
   
   <div id="saveStatus">Saved</div>
-
-
-  <button id="scrollTopBtn" onclick="scrollToTop()" aria-label="Back to top">
-  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" viewBox="0 0 16 16">
-    <path fill-rule="evenodd" d="M8 4.354l-5.146 5.147.708.708L8 5.768l4.438 4.441.708-.708z"/>
-  </svg>
-</button>
 
 <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
 <script>
@@ -1731,8 +1812,29 @@ function changeStep(n) {
 document.addEventListener("DOMContentLoaded", () => {
   navigateTo(currentStep);
 });
-  
+
+// iOS-Style Back Navigation Interceptor
+const backToMainLink = document.getElementById("backToMainLink");
+if (backToMainLink) {
+    backToMainLink.addEventListener("click", function(e) {
+        e.preventDefault(); // Always intercept to control the navigation flow cleanly
+        
+        // If the browser has history of a previous page within your system, pop back to it natively
+        if (document.referrer && document.referrer.includes(window.location.hostname)) {
+            window.history.back();
+        } else {
+            // Secure Fallback: If they opened the form directly in a new tab
+            window.location.href = "dashboard.html";
+        }
+    });
+}  
 </script>
-</main> 
+     <!-- Interactive Script for Mobile Navigation Layout Toggle -->
+<script>
+        function toggleMobileMenu() {
+            document.getElementById('navMenu').classList.toggle('show');
+        }
+</script>  
+  
 </body>
 </html>
