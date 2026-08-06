@@ -818,11 +818,11 @@ input[readonly] {
       <div class="doc-row">
         <div class="doc-info">
           <b class="doc-title">Application for Fund Withdrawal</b>
-          <span class="doc-sub">LF1050 · 3 Pages (email to myben@manulife.my )</span>
+          <span class="doc-sub">LF5189 · 3 Pages (email to POS : mypos@manulife.my )</span>
         </div>
         <div class="actions">
-          <button onclick="fillPDF('Application for Fund Withdrawal_LF1050_fillable.pdf', 'view')" class="btn-secondary">View</button>
-          <button onclick="fillPDF('Application for Fund Withdrawal_LF1050_fillable.pdf', 'download')" class="btn-primary">Download</button>
+          <button onclick="fillPDF('Request-For-Change-of-Policy-Condition_LF5189_fillable.pdf', 'view')" class="btn-secondary">View</button>
+          <button onclick="fillPDF('Request-For-Change-of-Policy-Condition_LF5189_fillable.pdf', 'download')" class="btn-primary">Download</button>
         </div>
       </div>
     </div> <!-- Close pdf-grid -->
@@ -1582,47 +1582,53 @@ if (sig_Simple_Assignee) {
     // Flatten form fields before saving
     //form.flatten();
     
-       // Save & download FillPDF
-    const pdfBytes = await pdfDoc.save();
+       const pdfBytes = await pdfDoc.save();
+    const blob = new Blob([pdfBytes], { type: "application/pdf" });
+    const url = URL.createObjectURL(blob);
 
-    // 1. Get Policy Number and handle naming
-    const policyInput = document.getElementById('Complx_PolicyNo');
+    // 4. Construct output filename with policy number fallback
+    const policyVal = getValue("Complx_PolicyNo");
     let policyNum = "NEW";
-    
-    if (policyInput && policyInput.value.trim() !== "") {
-        // Remove special characters that aren't allowed in filenames
-        policyNum = policyInput.value.trim().replace(/[^a-z0-9]/gi, '_');
+
+    if (policyVal.trim() !== "") {
+      policyNum = policyVal.trim().replace(/[^a-z0-9]/gi, '_');
+    } else {
+      const savedPolicy = localStorage.getItem("ILWD_PolicyNo");
+      if (savedPolicy && savedPolicy.trim() !== "") {
+        policyNum = savedPolicy.trim().replace(/[^a-z0-9]/gi, '_');
+      }
     }
 
     const finalFileName = `${policyNum}_RFC_Policy_Condition.pdf`;
 
-    // 2. Trigger Download
-    const blob = new Blob([pdfBytes], { type: "application/pdf" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a"); 
-    
-    a.href = url; 
-    a.download = finalFileName; // Dynamic name applied here
-    
-    document.body.appendChild(a); 
-    a.click(); 
-    a.remove();
-    
-    setTimeout(()=> URL.revokeObjectURL(url), 2500);
+    // 5. Execute action (View in new tab OR Force Download)
+    if (action === 'view') {
+      window.open(url, '_blank');
+    } else {
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = finalFileName;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    }
 
-  } catch(err){
+    // 6. Clean up Blob URL memory leak after 5 seconds
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+
+  } catch (err) {
+    console.error("Critical PDF Error:", err);
     alert("PDF generation failed: " + (err.message || err));
-    console.error(err);
   } finally {
-    // This assumes your $ helper is defined: const $ = id => document.getElementById(id);
-    $("generate").disabled = false;
+    // Re-enable action buttons
+    actionButtons.forEach(btn => btn.disabled = false);
   }
 }
 
 
 
 /* ---------- RESET ALL DATA function ---------- */
-function resetAll() {
+function resetAllData() {
   if (!confirm("Are you sure you want to reset the form? All saved data will be cleared.")) {
     return;
   }
@@ -1649,12 +1655,6 @@ function resetAll() {
   // 4) Update status text if you have it
   showSaveStatus();
 }
-
-  /* ---------- Wire buttons ---------- */
-$("generate").addEventListener("click", fillPDF);
-$("resetAll").addEventListener("click", resetAll);
-document.querySelectorAll(".persist").forEach(autoBindSave);
-
 
   // Show button when user scrolls down
 window.addEventListener("scroll", () => {
