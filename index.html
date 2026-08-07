@@ -965,6 +965,9 @@ const CONTROLLER_BY_SECTION = {
 
 // ---------- UI ENABLE/DISABLE TOGGLE ----------
 document.addEventListener("DOMContentLoaded", () => {
+  // 1. RESTORE STATE FIRST so checkboxes get their saved true/false values
+  document.querySelectorAll("input, select, textarea").forEach(autoBindSave);
+
   function setSectionEnabled(sectionEl, enabled) {
     if (!sectionEl) return;
     const inputs = sectionEl.querySelectorAll("input, select, textarea, button");
@@ -972,15 +975,18 @@ document.addEventListener("DOMContentLoaded", () => {
     sectionEl.style.display = enabled ? "" : "none";
   }
 
+  // 2. INITIALIZE SECTIONS AFTER states are restored
   Object.entries(CONTROLLER_BY_SECTION).forEach(([sectionId, controllerId]) => {
     const controller = document.getElementById(controllerId);
     const section = document.getElementById(sectionId);
     if (controller && section) {
       const updateState = () => setSectionEnabled(section, controller.checked);
       controller.addEventListener("change", updateState);
-      updateState();
+      updateState(); // Reads the restored checkbox state correctly
     }
   });
+});
+
 
   // Auto-bind input storage restoration
   document.querySelectorAll("input, select, textarea").forEach(autoBindSave);
