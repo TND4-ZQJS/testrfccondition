@@ -1697,7 +1697,7 @@ if (sig_Simple_Assignee) {
     if (policyVal.trim() !== "") {
       policyNum = policyVal.trim().replace(/[^a-z0-9]/gi, '_');
     } else {
-      const savedPolicy = localStorage.getItem("ILWD_PolicyNo");
+      const savedPolicy = localStorage.getItem("Complx_PolicyNo");
       if (savedPolicy && savedPolicy.trim() !== "") {
         policyNum = savedPolicy.trim().replace(/[^a-z0-9]/gi, '_');
       }
