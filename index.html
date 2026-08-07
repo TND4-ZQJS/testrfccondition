@@ -943,7 +943,8 @@ a.back-link svg {margin-left: -6px;transform: translateY(0.5px);stroke: #007aff 
 <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
 <script>
 
-  function $(id) {
+  /* ---------- HELPER ---------- */
+function $(id) {
   return document.getElementById(id);
 }
   
@@ -968,11 +969,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!sectionEl) return;
     const inputs = sectionEl.querySelectorAll("input, select, textarea, button");
     inputs.forEach(el => el.disabled = !enabled);
-
-    // 👇 visual cue: either dim, or hide completely (choose one)
-    //sectionEl.style.opacity = enabled ? "1" : "0.6";
-    //sectionEl.style.pointerEvents = enabled ? "auto" : "none";
-    // If you prefer hiding instead of dimming, use:
     sectionEl.style.display = enabled ? "" : "none";
   }
 
@@ -982,9 +978,12 @@ document.addEventListener("DOMContentLoaded", () => {
     if (controller && section) {
       const updateState = () => setSectionEnabled(section, controller.checked);
       controller.addEventListener("change", updateState);
-      updateState(); // initialize state on load
+      updateState();
     }
   });
+
+  // Auto-bind input storage restoration
+  document.querySelectorAll("input, select, textarea").forEach(autoBindSave);
 });
 
 // ---------- EXPORT FILTER LOGIC ----------
@@ -996,18 +995,17 @@ function shouldIncludeFieldByUI(fieldId) {
     if (parent.id && CONTROLLER_BY_SECTION[parent.id]) {
       const controllerId = CONTROLLER_BY_SECTION[parent.id];
       const cb = document.getElementById(controllerId);
-      if (cb && !cb.checked) return false; // skip if unchecked
+      if (cb && !cb.checked) return false;
     }
     parent = parent.parentElement;
   }
   return true;
 }
 
-
-/* ---SAVE STATUS + LOCALSTORAGE (Text, Checkbox, Dropdown) ---------- */
-const saveStatusEl = document.getElementById("saveStatus");
-
+/* --- SAVE STATUS + LOCALSTORAGE ---------- */
 function showSaveStatus(){
+  const saveStatusEl = document.getElementById("saveStatus");
+  if (!saveStatusEl) return;
   saveStatusEl.style.opacity = 1;
   clearTimeout(saveStatusEl._timer);
   saveStatusEl._timer = setTimeout(()=> saveStatusEl.style.opacity = 0, 1200);
@@ -1019,9 +1017,10 @@ function saveElValue(el){
 }
 
 function autoBindSave(el) {
+  if (!el.id) return;
   const saved = localStorage.getItem(el.id);
 
-  // Restore
+  // Restore State
   if (el.type === "checkbox") {
     if (saved !== null) el.checked = (saved === "true");
   } else if (el.type === "radio") {
@@ -1033,7 +1032,7 @@ function autoBindSave(el) {
     el.value = saved;
   }
 
-  // Bind save
+  // Bind Event Listeners
   if (el.tagName === "SELECT") {
     el.addEventListener("change", () => saveElValue(el));
   } else if (el.type === "checkbox") {
@@ -1044,41 +1043,37 @@ function autoBindSave(el) {
   } else if (el.type === "radio") {
     el.addEventListener("change", () => {
       if (el.checked) {
-        localStorage.setItem(el.name, el.id); // store under group name
+        localStorage.setItem(el.name, el.id);
         showSaveStatus();
       }
     });
-} else {
-  el.addEventListener("input", () => {
-    const s = el.selectionStart;
-    const e = el.selectionEnd;
+  } else {
+    el.addEventListener("input", () => {
+      const s = el.selectionStart;
+      const e = el.selectionEnd;
 
-    if (el.id !== "MHSE_Info_POEmail") {
-      el.value = el.value.toUpperCase();
-    }
+      if (el.id !== "MHSE_Info_POEmail") {
+        el.value = el.value.toUpperCase();
+      }
 
-    el.setSelectionRange(s, e);   // ← KEY FIX
+      if (typeof el.setSelectionRange === "function") {
+        el.setSelectionRange(s, e);
+      }
 
-    localStorage.setItem(el.id, el.value);
-    showSaveStatus();
-  });
+      localStorage.setItem(el.id, el.value);
+      showSaveStatus();
+    });
+  }
 }
-}
 
-  
 /* ---------- UNIVERSAL HELPER FUNCTION ---------- */
-
-  //Detect input type - text/dropdown/checkbox/radio
 function safeSetField(form, fieldName, value) {
   if (value === null || value === undefined) return;
 
   try {
     let field;
-
-    // text or textarea, then force Uppercase
     try {
       field = form.getTextField(fieldName);
-      // Keep original case for email
       if (fieldName === "MHSE_Info_POEmail") {
         field.setText(value);
       } else {
@@ -1087,14 +1082,12 @@ function safeSetField(form, fieldName, value) {
       return;
     } catch (e) {}
 
-    // dropdown
     try {
       field = form.getDropdown(fieldName);
       field.select(value);
       return;
     } catch (e) {}
 
-    // checkbox
     try {
       field = form.getCheckBox(fieldName);
       if (value === true || value === "true" || value === "on" || value === "checked") {
@@ -1105,7 +1098,6 @@ function safeSetField(form, fieldName, value) {
       return;
     } catch (e) {}
     
-    // radio
     try {
       field = form.getRadioGroup(fieldName);
       field.select(value);
@@ -1118,44 +1110,33 @@ function safeSetField(form, fieldName, value) {
   }
 }
 
-/* ---------- Combined PO -> E-Bank & PO -> Insured Sync Helper ---------- */
+/* ---------- SYNC HELPER ---------- */
 document.addEventListener("DOMContentLoaded", () => {
-  // Elements
   const poName    = document.getElementById("Complx_Sign_PO_Name");
   const poNric    = document.getElementById("Complx_Sign_PO_NIRC");
-
   const insuredPOCheckbox = document.getElementById("Complx_Insured_is_PO");
   const insuredName        = document.getElementById("Complx_Insured_Name");
   const insuredNric        = document.getElementById("Complx_Insured_NIRC");
 
-  // Helper to safely format value to Uppercase
   const toUpper = (val) => (val || "").toUpperCase();
 
-  // Helper to update field + localStorage + save status
   function setAndPersist(el, value) {
     if (!el) return;
     el.value = value;
     localStorage.setItem(el.id, value);
-    if (typeof showSaveStatus === "function") showSaveStatus();
+    showSaveStatus();
   }
 
-  // Helper to clear field + remove from localStorage + save status
   function clearAndRemovePersist(el) {
     if (!el) return;
     el.value = "";
     localStorage.removeItem(el.id);
-    if (typeof showSaveStatus === "function") showSaveStatus();
+    showSaveStatus();
   }
 
-
-  /* --- 2. INSURED SYNC (Conditional on Checkbox) --- */
   function syncInsuredFromPO() {
-    if (insuredName && poName) {
-      setAndPersist(insuredName, toUpper(poName.value));
-    }
-    if (insuredNric && poNric) {
-      setAndPersist(insuredNric, toUpper(poNric.value));
-    }
+    if (insuredName && poName) setAndPersist(insuredName, toUpper(poName.value));
+    if (insuredNric && poNric) setAndPersist(insuredNric, toUpper(poNric.value));
   }
 
   function clearInsuredFields() {
@@ -1173,19 +1154,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function handleInsuredCheckboxChange() {
     if (!insuredPOCheckbox) return;
-    
     if (insuredPOCheckbox.checked) {
       syncInsuredFromPO();
       setInsuredLocked(true);
     } else {
-      // Clear data & remove from localStorage when unchecked
       clearInsuredFields();
       setInsuredLocked(false);
     }
   }
 
-  /* --- 3. EVENT BINDINGS & INITIALIZATION --- */
-  // Live Sync on Policy Owner Typing
   if (poName) {
     poName.addEventListener("input", () => {
       if (typeof syncEBankFromPO === "function") syncEBankFromPO();
@@ -1200,15 +1177,12 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Checkbox Event Listener
   if (insuredPOCheckbox) {
     insuredPOCheckbox.addEventListener("change", handleInsuredCheckboxChange);
   }
 
-  // Initial Sync on Page Load
   setTimeout(() => {
     if (typeof syncEBankFromPO === "function") syncEBankFromPO();
-    // Only set lock state without clearing on page startup
     if (insuredPOCheckbox && insuredPOCheckbox.checked) {
       syncInsuredFromPO();
       setInsuredLocked(true);
@@ -1218,65 +1192,46 @@ document.addEventListener("DOMContentLoaded", () => {
   }, 50);
 });
 
-
-/* ---------- Date Set Today Button ---------- */  
+/* ---------- SIGNED DATE HELPER ---------- */  
 function setSignedDateToday() {
   const now = new Date();
-
-  // 1. Format Day (e.g., 5 -> "05")
   const dayStr = String(now.getDate()).padStart(2, '0');
-
-  // 2. Format Month string matching select options
   const monthNames = [
     "JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE",
     "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"
   ];
   const monthStr = monthNames[now.getMonth()];
-
-  // 3. Format Year (e.g., "2026")
   const yearStr = String(now.getFullYear());
 
-  // 4. Target elements
   const daySelect = document.getElementById('Complx_Sign_Day');
   const monthSelect = document.getElementById('Complx_Sign_Month');
   const yearSelect = document.getElementById('Complx_Sign_Year');
 
   if (daySelect && monthSelect && yearSelect) {
-    // Set values
     daySelect.value = dayStr;
     monthSelect.value = monthStr;
     yearSelect.value = yearStr;
 
-    // Dispatch change event to trigger local storage auto-save listeners if present
     daySelect.dispatchEvent(new Event('change', { bubbles: true }));
     monthSelect.dispatchEvent(new Event('change', { bubbles: true }));
     yearSelect.dispatchEvent(new Event('change', { bubbles: true }));
 
-    // Explicitly write to localStorage if you store form fields by ID directly
     saveToLocalStorage('Complx_Sign_Day', dayStr);
     saveToLocalStorage('Complx_Sign_Month', monthStr);
     saveToLocalStorage('Complx_Sign_Year', yearStr);
   }
 }
 
-// Helper function for local storage persistence
 function saveToLocalStorage(id, value) {
   try {
-    // If you use a single object key for form data, adapt this accordingly
     localStorage.setItem(id, value);
-    
-    // Optional: trigger your save indicator toast if you have one
-    const saveStatus = document.getElementById('saveStatus');
-    if (saveStatus) {
-      saveStatus.style.opacity = '1';
-      setTimeout(() => { saveStatus.style.opacity = '0'; }, 1500);
-    }
+    showSaveStatus();
   } catch (e) {
     console.error('Failed to save to localStorage:', e);
   }
 }  
 
-/* ---------- Signature Names Display ---------- */
+/* ---------- DISPLAY UPDATE ---------- */
 document.addEventListener("DOMContentLoaded", () => {
   const fieldMap = {
     "Complx_Sign_PO_Name":  "Complx_PO_Name_Display",
@@ -1289,11 +1244,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!displayEl) return;
 
     const sourceInput = document.getElementById(storageKey);
-    
-    // Priority:
-    // 1. Direct typed value (if from live typing event)
-    // 2. localStorage value
-    // 3. Current input DOM value
     const savedInStorage = localStorage.getItem(storageKey);
     const inputVal = sourceInput ? sourceInput.value : "";
     
@@ -1310,106 +1260,97 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Bind live typing listeners to inputs
   Object.entries(fieldMap).forEach(([storageKey, displayId]) => {
     const sourceInput = document.getElementById(storageKey);
     if (sourceInput) {
       sourceInput.addEventListener("input", (e) => {
         updateDisplay(storageKey, displayId, e.target.value);
       });
-      // Also listen for change/restore events
       sourceInput.addEventListener("change", () => {
         updateDisplay(storageKey, displayId);
       });
     }
   });
 
-  // 1. Immediate update
   refreshAllDisplays();
-
-  // 2. Delayed update (wait 100ms for autoBindSave / restoration script to finish putting localStorage values into the DOM inputs)
   setTimeout(refreshAllDisplays, 100);
 });
 
-/* ---------- SIGNATURE MODAL LOGIC (Owner + Payor) with HiDPI scaling ---------- */
+/* ---------- SIGNATURE CANVAS LOGIC ---------- */
 let sigTarget = null;
 const sigModal = $("sigModal");
 const sigCanvas = $("sigCanvas");
-const sigCtx = sigCanvas.getContext("2d");
+const sigCtx = sigCanvas ? sigCanvas.getContext("2d") : null;
 let drawing = false;
 let scaleX = 1, scaleY = 1;
 
-/* Resize canvas to look crisp on any screen size & DPR */
 function resizeSigCanvas(){
+  if (!sigCanvas || !sigCtx) return;
   const dpr = window.devicePixelRatio || 1;
   const cssWidth = sigCanvas.clientWidth || sigCanvas.parentElement.clientWidth || 560;
   const cssHeight = sigCanvas.clientHeight || 220;
   sigCanvas.width = Math.max(1, Math.floor(cssWidth * dpr));
   sigCanvas.height = Math.max(1, Math.floor(cssHeight * dpr));
-  sigCtx.setTransform(1,0,0,1,0,0); // reset
+  sigCtx.setTransform(1,0,0,1,0,0);
   sigCtx.scale(dpr, dpr);
   sigCtx.lineWidth = 2;
   sigCtx.lineCap = "round";
   sigCtx.strokeStyle = "#000";
   scaleX = sigCanvas.width / (sigCanvas.getBoundingClientRect().width || cssWidth);
   scaleY = sigCanvas.height / (sigCanvas.getBoundingClientRect().height || cssHeight);
-  // White background (prevents transparent PNG on PDFs)
-  //sigCtx.fillStyle = "#fff";
-  //sigCtx.fillRect(0,0,sigCanvas.width/scaleX, sigCanvas.height/scaleY);
 }
 
 function openSig(target){
-  sigTarget = target; // 'simple_owner' | 'simple_witness' | 'simple_assignee' | 'simple_oldsig'| 'simple_newsig'
+  sigTarget = target;
+  const titleEl = $("sigModalTitle");
+  if (titleEl) {
+    if (target === 'simple_owner') titleEl.textContent = "Sign: Policy Owner";
+    else if (target === 'simple_witness') titleEl.textContent = "Sign: Witness";
+    else if (target === 'simple_assignee') titleEl.textContent = "Sign: Trustee";
+  }
 
-if (target === 'simple_owner') {
-  $("sigModalTitle").textContent = "Sign: Policy Owner";
-} else if (target === 'simple_witness') {
-  $("sigModalTitle").textContent = "Sign: Witness";
-} else if (target === 'simple_assignee') {
-  $("sigModalTitle").textContent = "Sign: Trustee";
-}
+  if (sigModal) {
+    sigModal.style.display = "block";
+    sigModal.setAttribute("aria-hidden", "false");
+  }
 
-  sigModal.style.display = "block";
-  sigModal.setAttribute("aria-hidden", "false");
-
-  // Next frame: ensure layout settled then resize canvas
   requestAnimationFrame(()=>{
     resizeSigCanvas();
-  sigCtx.clearRect(0, 0, sigCanvas.width, sigCanvas.height);
-  
-    // If there is an existing signature, draw it to current canvas size
+    if (sigCtx) sigCtx.clearRect(0, 0, sigCanvas.width, sigCanvas.height);
     const existing = localStorage.getItem("sig_"+target);
-    if (existing){
+    if (existing && sigCtx){
       const img = new Image();
       img.onload = ()=>{
-        // cover the canvas area with existing image
         sigCtx.drawImage(img, 0, 0, sigCanvas.width/scaleX, sigCanvas.height/scaleY);
       };
       img.src = existing;
     }
   });
 }
-$("sigClear").addEventListener("click", ()=>{
-  sigCtx.clearRect(0,0,sigCanvas.width, sigCanvas.height);
-  // Repaint white bg in CSS pixels
-  //sigCtx.fillStyle="#fff"; sigCtx.fillRect(0,0,sigCanvas.width/scaleX, sigCanvas.height/scaleY);
+
+$("sigClear")?.addEventListener("click", ()=>{
+  if (sigCtx) sigCtx.clearRect(0,0,sigCanvas.width, sigCanvas.height);
 });
-$("sigCancel").addEventListener("click", closeSigModal);
+
+$("sigCancel")?.addEventListener("click", closeSigModal);
+
 function closeSigModal(){
-  sigModal.style.display = "none";
-  sigModal.setAttribute("aria-hidden", "true");
+  if (sigModal) {
+    sigModal.style.display = "none";
+    sigModal.setAttribute("aria-hidden", "true");
+  }
   sigTarget = null;
 }
-$("sigDone").addEventListener("click", ()=>{
-  if(!sigTarget) return;
+
+$("sigDone")?.addEventListener("click", ()=>{
+  if(!sigTarget || !sigCanvas) return;
   const dataURL = sigCanvas.toDataURL("image/png");
   localStorage.setItem("sig_"+sigTarget, dataURL);
   const preview = $("preview_"+sigTarget);
-  preview.innerHTML = `<img alt="Signature ${sigTarget}" src="${dataURL}">`;
+  if (preview) preview.innerHTML = `<img alt="Signature ${sigTarget}" src="${dataURL}">`;
   closeSigModal();
 });
 
-/* Drawing (mouse + touch) with coordinate conversion */
 function getPos(e){
   const rect = sigCanvas.getBoundingClientRect();
   if(e.touches && e.touches[0]){
@@ -1417,16 +1358,24 @@ function getPos(e){
   }
   return { x: (e.clientX - rect.left), y: (e.clientY - rect.top) };
 }
+
 function startDraw(e){
+  if (!sigCtx) return;
   drawing = true;
   sigCtx.beginPath();
   const {x,y}=getPos(e);
   sigCtx.moveTo(x, y);
   e.preventDefault?.();
 }
-function endDraw(){ drawing = false; sigCtx.beginPath(); }
+
+function endDraw(){ 
+  if (!sigCtx) return;
+  drawing = false; 
+  sigCtx.beginPath(); 
+}
+
 function moveDraw(e){
-  if(!drawing) return;
+  if(!drawing || !sigCtx) return;
   const {x,y} = getPos(e);
   sigCtx.lineTo(x, y);
   sigCtx.stroke();
@@ -1434,268 +1383,137 @@ function moveDraw(e){
   sigCtx.moveTo(x, y);
   e.preventDefault?.();
 }
-sigCanvas.addEventListener("mousedown", startDraw);
-sigCanvas.addEventListener("mousemove", moveDraw);
-window.addEventListener("mouseup", endDraw);
-sigCanvas.addEventListener("touchstart", startDraw, {passive:false});
-sigCanvas.addEventListener("touchmove", moveDraw, {passive:false});
-sigCanvas.addEventListener("touchend", endDraw);
+
+if (sigCanvas) {
+  sigCanvas.addEventListener("mousedown", startDraw);
+  sigCanvas.addEventListener("mousemove", moveDraw);
+  window.addEventListener("mouseup", endDraw);
+  sigCanvas.addEventListener("touchstart", startDraw, {passive:false});
+  sigCanvas.addEventListener("touchmove", moveDraw, {passive:false});
+  sigCanvas.addEventListener("touchend", endDraw);
+}
+
 window.addEventListener("resize", ()=> {
-  // Only resize when modal is open to avoid reflow glitches
-  if(sigModal.getAttribute("aria-hidden")==="false"){ 
+  if(sigModal && sigModal.getAttribute("aria-hidden")==="false"){ 
     const img = new Image();
     img.onload = ()=>{
       resizeSigCanvas();
-      sigCtx.drawImage(img, 0, 0, sigCanvas.width/scaleX, sigCanvas.height/scaleY);
+      if (sigCtx) sigCtx.drawImage(img, 0, 0, sigCanvas.width/scaleX, sigCanvas.height/scaleY);
     };
     img.src = sigCanvas.toDataURL("image/png");
   }
 });
 
-/* Clear preview buttons + Restore previews on load */
-$("clearPreview_Simple_Owner").addEventListener("click", ()=>{
+$("clearPreview_Simple_Owner")?.addEventListener("click", ()=>{
   localStorage.removeItem("sig_simple_owner");
-  $("preview_simple_owner").innerHTML = `<span>Tap to Sign (Policyowner/Assignee)</span>`;
+  const el = $("preview_simple_owner");
+  if (el) el.innerHTML = `<span>Tap to Sign (Policyowner/Assignee)</span>`;
 });
-$("clearPreview_Simple_Witness").addEventListener("click", ()=>{
+$("clearPreview_Simple_Witness")?.addEventListener("click", ()=>{
   localStorage.removeItem("sig_simple_witness");
-  $("preview_simple_witness").innerHTML = `<span>Tap to Sign (Witness)</span>`;
+  const el = $("preview_simple_witness");
+  if (el) el.innerHTML = `<span>Tap to Sign (Witness)</span>`;
 });
-$("clearPreview_Simple_Assignee").addEventListener("click", ()=>{
+$("clearPreview_Simple_Assignee")?.addEventListener("click", ()=>{
   localStorage.removeItem("sig_simple_assignee");
-  $("preview_simple_assignee").innerHTML = `<span>Tap to Sign (Trustee/Nominee)</span>`;
+  const el = $("preview_simple_assignee");
+  if (el) el.innerHTML = `<span>Tap to Sign (Trustee/Nominee)</span>`;
 });
 
 window.addEventListener("DOMContentLoaded", ()=>{
   ["owner","witness","assignee"].forEach(role=>{
     const saved = localStorage.getItem("sig_simple_"+role);
-    if(saved){ $("preview_simple_"+role).innerHTML = `<img alt="Signature ${role}" src="${saved}">`; }
+    const preview = $("preview_simple_"+role);
+    if(saved && preview){ preview.innerHTML = `<img alt="Signature ${role}" src="${saved}">`; }
   });
 });
-  
 
 /* ---------- GENERATE PDF ---------- */
-async function fillPDF(templateFileName, action = 'download') {
-  // Grab action buttons to disable them during generation
-  const actionButtons = document.querySelectorAll('.actions button');
+async function fillPDF(templateFileName = PDF_FILENAME, action = 'download') {
+  const actionButtons = document.querySelectorAll('.actions button, button');
   actionButtons.forEach(btn => btn.disabled = true);
 
-  // Helper function to safely fetch input DOM values without crashing on missing elements
   const getValue = (id) => {
     const el = document.getElementById(id);
     return el ? el.value : "";
   };
 
-  const getChecked = (id) => {
-    const el = document.getElementById(id);
-    return el ? el.checked : false;
-  };
-
   try {
-    // 1. Fetch template PDF
     const response = await fetch(templateFileName);
     if (!response.ok) {
       throw new Error(`Failed to load template file: ${templateFileName}`);
     }
     const existingPdfBytes = await response.arrayBuffer();
 
-    // 2. Load PDF document & get interactive form
     const pdfDoc = await PDFLib.PDFDocument.load(existingPdfBytes);
-    const form = pdfDoc.getForm(); // <-- FIXED: Form initialization added
-
+    const form = pdfDoc.getForm();
     const pages = pdfDoc.getPages();
-    const page = pages[2]; // use 3rd page
+    const page = pages[2] || pages[0]; // FIX: Defined page target
 
-    // FILL FORM FIELDS FROM LOCALSTORAGE HERE
-const fieldNames = [
-  "Complx_Insured_Name",
-  "Complx_PolicyNo",
-  "Complx_Insured_NIRC",
-  "Complx_Occupation_New",
-  "Complx_Occupation_Comp",
-  "Complx_Occupation_Duty",
-  "Complx_Occupation_MM",
-  "Complx_Occupation_YYYY",
-  "Complx_Occupation_Nature",
-  "Complx_ReducePremium_Basic_Yes",
-  "Complx_ReducePremium_Basic_Amt",
-  "Complx_ReducePremium_Topup_Yes",
-  "Complx_ReducePremium_Topup_Amt",
-  "Complx_IncreaseFA_Basic",
-  "Complx_IncreaseFA_Basic_Yes",
-  "Complx_IncreaseFA_Rider_Yes",
-  "Complx_IncreaseFA_Rider1_Name",
-  "Complx_IncreaseFA_Rider1_FA",
-  "Complx_IncreaseFA_Rider2_Name",
-  "Complx_IncreaseFA_Rider3_Name",
-  "Complx_IncreaseFA_Rider2_FA", 
-  "Complx_IncreaseFA_Rider3_FA", 
-  "Complx_AddRider_Yes",
-  "Complx_AddRider1_Name",
-  "Complx_AddRider1_Term",
-  "Complx_AddRider1_FA",
-  "Complx_AddRider2_Name",
-  "Complx_AddRider3_Name",
-  "Complx_AddRider2_Term",
-  "Complx_AddRider3_Term",
-  "Complx_AddRider2_FA",
-  "Complx_AddRider3_FA",
-  "Complx_Review_Rating",
-  "Complx_Review_Exclusion",
-  "Complx_ReduceFA_Basic_Yes",
-  "Complx_ReduceFA_Basic_Amt",
-  "Complx_ReduceFA_Rider_Yes",
-  "Complx_ReduceFA_Rider1_Name2",
-  "Complx_ReduceFA_Rider1_Name3",
-  "Complx_ReduceFA_Rider1_FA1",
-  "Complx_ReduceFA_Rider1_FA2",
-  "Complx_ReduceFA_Rider1_FA3",
-  "Complx_CancelRider_Yes",
-  "Complx_ReduceFA_Rider_Name1",
-  "Complx_CancelRider_Name1",
-  "Complx_CancelRider_Name2",
-  "Complx_CancelRider_Name3",
-  "Complx_CancelRider_Name4",
-  "Complx_CancelRider_Name5",
-  "Complx_CancelRider_Name6",
-  "Complx_Others_Line1",
-  "Complx_Others_Line2",
-  "Complx_Others_Line3",
-  "Complx_Others_Line4",
-  "Complx_Sign_State",
-  "Complx_Sign_Day",
-  "Complx_Sign_Month",
-  "Complx_Sign_Year",
-  "Complx_Sign_PO_Name",
-  "Complx_Sign_PO_NIRC",
-  "Complx_Sign_Trustee_Name",
-  "Complx_Sign_Trustee_NIRC",
-  "Complx_Sign_Witness_Name",
-  "Complx_Sign_Witness_NIRC",
-  "Complx_Sign_Witness_Mobile"
-];
+    const fieldNames = [
+      "Complx_Insured_Name", "Complx_PolicyNo", "Complx_Insured_NIRC",
+      "Complx_Occupation_New", "Complx_Occupation_Comp", "Complx_Occupation_Duty",
+      "Complx_Occupation_MM", "Complx_Occupation_YYYY", "Complx_Occupation_Nature",
+      "Complx_ReducePremium_Basic_Yes", "Complx_ReducePremium_Basic_Amt",
+      "Complx_ReducePremium_Topup_Yes", "Complx_ReducePremium_Topup_Amt",
+      "Complx_IncreaseFA_Basic", "Complx_IncreaseFA_Basic_Yes", "Complx_IncreaseFA_Rider_Yes",
+      "Complx_IncreaseFA_Rider1_Name", "Complx_IncreaseFA_Rider1_FA",
+      "Complx_IncreaseFA_Rider2_Name", "Complx_IncreaseFA_Rider3_Name",
+      "Complx_IncreaseFA_Rider2_FA", "Complx_IncreaseFA_Rider3_FA", 
+      "Complx_AddRider_Yes", "Complx_AddRider1_Name", "Complx_AddRider1_Term",
+      "Complx_AddRider1_FA", "Complx_AddRider2_Name", "Complx_AddRider3_Name",
+      "Complx_AddRider2_Term", "Complx_AddRider3_Term", "Complx_AddRider2_FA",
+      "Complx_AddRider3_FA", "Complx_Review_Rating", "Complx_Review_Exclusion",
+      "Complx_ReduceFA_Basic_Yes", "Complx_ReduceFA_Basic_Amt", "Complx_ReduceFA_Rider_Yes",
+      "Complx_ReduceFA_Rider1_Name2", "Complx_ReduceFA_Rider1_Name3", "Complx_ReduceFA_Rider1_FA1",
+      "Complx_ReduceFA_Rider1_FA2", "Complx_ReduceFA_Rider1_FA3", "Complx_CancelRider_Yes",
+      "Complx_ReduceFA_Rider_Name1", "Complx_CancelRider_Name1", "Complx_CancelRider_Name2",
+      "Complx_CancelRider_Name3", "Complx_CancelRider_Name4", "Complx_CancelRider_Name5",
+      "Complx_CancelRider_Name6", "Complx_Others_Line1", "Complx_Others_Line2",
+      "Complx_Others_Line3", "Complx_Others_Line4", "Complx_Sign_State",
+      "Complx_Sign_Day", "Complx_Sign_Month", "Complx_Sign_Year",
+      "Complx_Sign_PO_Name", "Complx_Sign_PO_NIRC", "Complx_Sign_Trustee_Name",
+      "Complx_Sign_Trustee_NIRC", "Complx_Sign_Witness_Name", "Complx_Sign_Witness_NIRC",
+      "Complx_Sign_Witness_Mobile"
+    ];
 
-fieldNames.forEach(fieldName => {
-  // If the UI section containing this field is currently unticked, skip it.
-  if (!shouldIncludeFieldByUI(fieldName)) return;
-
-  const value = localStorage.getItem(fieldName);
-  safeSetField(form, fieldName, value);
-});
-    
-    /* --------- SIGNATURE IMAGE EMBEDDING (embedPng + drawImage) --------- */
-
-// Owner signature FillPDF
-const sig_Simple_Owner = localStorage.getItem("sig_simple_owner");
-if (sig_Simple_Owner) {
-  try {
-    const img_Simple_Owner = await pdfDoc.embedPng(sig_Simple_Owner);
-    const { width, height } = img_Simple_Owner.size();
-
-    const previewEl = document.getElementById("preview_simple_owner");
-    const boxW = previewEl.offsetWidth;
-    const boxH = previewEl.offsetHeight;
-
-    const scale = Math.min(boxW / width, boxH / height);
-    let drawW = width * scale;
-    let drawH = height * scale;
-
-    const factor = 0.40;    // % scale
-    const posX = 50;         // X position on PDF
-    const posY = 620;        // Y position on PDF
-
-    drawW *= factor;
-    drawH *= factor;
-
-    page.drawImage(img_Simple_Owner, {
-      x: posX,
-      y: posY,
-      width: drawW,
-      height: drawH
+    fieldNames.forEach(fieldName => {
+      if (!shouldIncludeFieldByUI(fieldName)) return;
+      const value = localStorage.getItem(fieldName);
+      safeSetField(form, fieldName, value);
     });
-  } catch (e) {
-    console.error(e);
-  }
-}
 
-// Witness signature FillPDF
-const sig_Simple_Witness = localStorage.getItem("sig_simple_witness");
-if (sig_Simple_Witness) {
-  try {
-    const img_Simple_Witness = await pdfDoc.embedPng(sig_Simple_Witness);
-    const { width, height } = img_Simple_Witness.size();
+    // Signature Rendering Helper
+    async function embedSignature(storageKey, previewId, posX, posY) {
+      const sigData = localStorage.getItem(storageKey);
+      if (!sigData) return;
+      try {
+        const img = await pdfDoc.embedPng(sigData);
+        const { width, height } = img.size();
+        const previewEl = document.getElementById(previewId);
+        const boxW = previewEl ? previewEl.offsetWidth : 100;
+        const boxH = previewEl ? previewEl.offsetHeight : 50;
 
-    const previewEl = document.getElementById("preview_simple_witness");
-    const boxW = previewEl.offsetWidth;
-    const boxH = previewEl.offsetHeight;
+        const scale = Math.min(boxW / width, boxH / height);
+        let drawW = width * scale * 0.40;
+        let drawH = height * scale * 0.40;
 
-    const scale = Math.min(boxW / width, boxH / height);
-    let drawW = width * scale;
-    let drawH = height * scale;
+        page.drawImage(img, { x: posX, y: posY, width: drawW, height: drawH });
+      } catch (e) {
+        console.error(`Error embedding signature ${storageKey}:`, e);
+      }
+    }
 
-    const factor = 0.40;    // % scale
-    const posX = 410;         // X position on PDF
-    const posY = 620;        // Y position on PDF
+    await embedSignature("sig_simple_owner", "preview_simple_owner", 50, 620);
+    await embedSignature("sig_simple_witness", "preview_simple_witness", 410, 620);
+    await embedSignature("sig_simple_assignee", "preview_simple_assignee", 230, 620);
 
-    drawW *= factor;
-    drawH *= factor;
-
-    page.drawImage(img_Simple_Witness, {
-      x: posX,
-      y: posY,
-      width: drawW,
-      height: drawH
-    });
-  } catch (e) {
-    console.error(e);
-  }
-}
-
-
-// Assignee signature FillPDF
-const sig_Simple_Assignee = localStorage.getItem("sig_simple_assignee");
-if (sig_Simple_Assignee) {
-  try {
-    const img_Simple_Assignee = await pdfDoc.embedPng(sig_Simple_Assignee);
-    const { width, height } = img_Simple_Assignee.size();
-
-    const previewEl = document.getElementById("preview_simple_assignee");
-    const boxW = previewEl.offsetWidth;
-    const boxH = previewEl.offsetHeight;
-
-    const scale = Math.min(boxW / width, boxH / height);
-    let drawW = width * scale;
-    let drawH = height * scale;
-
-    const factor = 0.40;    // % scale
-    const posX = 230;         // X position on PDF
-    const posY = 620;        // Y position on PDF
-
-    drawW *= factor;
-    drawH *= factor;
-
-    page.drawImage(img_Simple_Assignee, {
-      x: posX,
-      y: posY,
-      width: drawW,
-      height: drawH
-    });
-  } catch (e) {
-    console.error(e);
-  }
-}
-    
-    // Flatten form fields before saving
-    //form.flatten();
-    
-       const pdfBytes = await pdfDoc.save();
+    const pdfBytes = await pdfDoc.save();
     const blob = new Blob([pdfBytes], { type: "application/pdf" });
     const url = URL.createObjectURL(blob);
 
-    // 4. Construct output filename with policy number fallback
     const policyVal = getValue("Complx_PolicyNo");
     let policyNum = "NEW";
-
     if (policyVal.trim() !== "") {
       policyNum = policyVal.trim().replace(/[^a-z0-9]/gi, '_');
     } else {
@@ -1707,7 +1525,6 @@ if (sig_Simple_Assignee) {
 
     const finalFileName = `${policyNum}_RFC_Policy_Condition.pdf`;
 
-    // 5. Execute action (View in new tab OR Force Download)
     if (action === 'view') {
       window.open(url, '_blank');
     } else {
@@ -1719,30 +1536,24 @@ if (sig_Simple_Assignee) {
       link.remove();
     }
 
-    // 6. Clean up Blob URL memory leak after 5 seconds
     setTimeout(() => URL.revokeObjectURL(url), 5000);
 
   } catch (err) {
     console.error("Critical PDF Error:", err);
     alert("PDF generation failed: " + (err.message || err));
   } finally {
-    // Re-enable action buttons
     actionButtons.forEach(btn => btn.disabled = false);
   }
 }
 
-
-
-/* ---------- RESET ALL DATA function ---------- */
+/* ---------- RESET ALL DATA ---------- */
 function resetAllData() {
   if (!confirm("Are you sure you want to reset the form? All saved data will be cleared.")) {
     return;
   }
 
-  // 1) Clear ALL saved keys
   localStorage.clear();
 
-  // 2) Clear the live UI values (inputs, checkboxes, radios, selects, textareas)
   document.querySelectorAll("input, select, textarea").forEach(el => {
     if (!el.id) return;
     if (el.type === "checkbox" || el.type === "radio") {
@@ -1752,19 +1563,16 @@ function resetAllData() {
     }
   });
 
-  // 3) Reset signature previews
-  $("preview_simple_owner").innerHTML   = `<span>Tap to Sign (Policyowner/Assignee)</span>`;
-  $("preview_simple_witness").innerHTML = `<span>Tap to Sign (Witness)</span>`;
-  $("preview_simple_assignee").innerHTML = `<span>Tap to Sign (Trustee/Nominee)</span>`;
+  if ($("preview_simple_owner")) $("preview_simple_owner").innerHTML = `<span>Tap to Sign (Policyowner/Assignee)</span>`;
+  if ($("preview_simple_witness")) $("preview_simple_witness").innerHTML = `<span>Tap to Sign (Witness)</span>`;
+  if ($("preview_simple_assignee")) $("preview_simple_assignee").innerHTML = `<span>Tap to Sign (Trustee/Nominee)</span>`;
 
-
-  // 4) Update status text if you have it
   showSaveStatus();
 }
 
-  // Show button when user scrolls down
 window.addEventListener("scroll", () => {
   const btn = document.getElementById("scrollTopBtn");
+  if (!btn) return;
   if (document.documentElement.scrollTop > 200 || document.body.scrollTop > 200) {
     btn.classList.add("show");
   } else {
@@ -1772,48 +1580,36 @@ window.addEventListener("scroll", () => {
   }
 });
 
-// Smooth scroll to top
 function scrollToTop() {
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
-// WIZARD TRACKER LOGIC
+/* ---------- WIZARD TRACKER LOGIC ---------- */
 const steps = document.querySelectorAll(".wizard-step");
 const indicatorSteps = document.querySelectorAll(".step");
 const nextBtn = document.getElementById("nextBtn");
 const prevBtn = document.getElementById("prevBtn");
 
-// 1. Load saved step on startup (fallback to 0 if invalid or empty)
 const savedStep = parseInt(localStorage.getItem("wizardCurrentStep"), 10);
 let currentStep = (!isNaN(savedStep) && savedStep >= 0 && savedStep < steps.length) ? savedStep : 0;
 
-// 2. Initialize Click Events for the Progress Tracker
 indicatorSteps.forEach((stepCircle, index) => {
-  stepCircle.addEventListener("click", () => {
-    navigateTo(index);
-  });
+  stepCircle.addEventListener("click", () => navigateTo(index));
 });
 
-// 3. Updated Navigation Function
 function navigateTo(index) {
-  // Clear 'active' from ALL steps & indicators to override hardcoded HTML
+  if (steps.length === 0) return;
   steps.forEach(step => step.classList.remove("active"));
   indicatorSteps.forEach(ind => ind.classList.remove("active"));
 
-  // Update Index
   currentStep = index;
-
-  // Persist current step to localStorage
   localStorage.setItem("wizardCurrentStep", currentStep);
 
-  // Apply active class to current step
-  steps[currentStep].classList.add("active");
-  indicatorSteps[currentStep].classList.add("active");
+  if (steps[currentStep]) steps[currentStep].classList.add("active");
+  if (indicatorSteps[currentStep]) indicatorSteps[currentStep].classList.add("active");
 
-  // Handle "Previous" button visibility
   if (prevBtn) prevBtn.style.visibility = (currentStep === 0) ? "hidden" : "visible";
 
-  // Handle "Next" button: Hide it completely on the final step
   if (nextBtn) {
     if (currentStep === steps.length - 1) {
       nextBtn.style.display = "none";
@@ -1823,22 +1619,17 @@ function navigateTo(index) {
     }
   }
 
-  // Smooth scroll to top of the card
   const mainContent = document.querySelector('main');
   if (mainContent) mainContent.scrollIntoView({ behavior: 'smooth' });
 }
 
-// 4. Updated Next/Back logic
 function changeStep(n) {
   let newStep = currentStep + n;
-  
-  // Only navigate if the step actually exists
   if (newStep >= 0 && newStep < steps.length) {
     navigateTo(newStep);
   }
 }
 
-// 5. Force UI to match saved step as soon as DOM is ready
 document.addEventListener("DOMContentLoaded", () => {
   navigateTo(currentStep);
 });
@@ -1846,25 +1637,21 @@ document.addEventListener("DOMContentLoaded", () => {
 // iOS-Style Back Navigation Interceptor
 const backToMainLink = document.getElementById("backToMainLink");
 if (backToMainLink) {
-    backToMainLink.addEventListener("click", function(e) {
-        e.preventDefault(); // Always intercept to control the navigation flow cleanly
-        
-        // If the browser has history of a previous page within your system, pop back to it natively
-        if (document.referrer && document.referrer.includes(window.location.hostname)) {
-            window.history.back();
-        } else {
-            // Secure Fallback: If they opened the form directly in a new tab
-            window.location.href = "dashboard.html";
-        }
-    });
+  backToMainLink.addEventListener("click", function(e) {
+    e.preventDefault();
+    if (document.referrer && document.referrer.includes(window.location.hostname)) {
+      window.history.back();
+    } else {
+      window.location.href = "dashboard.html";
+    }
+  });
 }  
+
+function toggleMobileMenu() {
+  const navMenu = document.getElementById('navMenu');
+  if (navMenu) navMenu.classList.toggle('show');
+}
+
 </script>
-     <!-- Interactive Script for Mobile Navigation Layout Toggle -->
-<script>
-        function toggleMobileMenu() {
-            document.getElementById('navMenu').classList.toggle('show');
-        }
-</script>  
-  
 </body>
 </html>
