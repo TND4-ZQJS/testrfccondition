@@ -1475,18 +1475,33 @@ window.addEventListener("DOMContentLoaded", ()=>{
   
 
 /* ---------- GENERATE PDF ---------- */
-async function fillPDF(){
+async function fillPDF(templateFileName, action = 'download') {
+  // Grab action buttons to disable them during generation
+  const actionButtons = document.querySelectorAll('.actions button');
+  actionButtons.forEach(btn => btn.disabled = true);
+
+  // Helper function to safely fetch input DOM values without crashing on missing elements
+  const getValue = (id) => {
+    const el = document.getElementById(id);
+    return el ? el.value : "";
+  };
+
+  const getChecked = (id) => {
+    const el = document.getElementById(id);
+    return el ? el.checked : false;
+  };
+
   try {
-    $("generate").disabled = true;
+    // 1. Fetch template PDF
+    const response = await fetch(templateFileName);
+    if (!response.ok) {
+      throw new Error(`Failed to load template file: ${templateFileName}`);
+    }
+    const existingPdfBytes = await response.arrayBuffer();
 
-    const res = await fetch(PDF_FILENAME);
-    if (!res.ok) throw new Error("Cannot load PDF: " + PDF_FILENAME);
-    const bytes = await res.arrayBuffer();
-    const pdfDoc = await PDFLib.PDFDocument.load(bytes);
-    const form = pdfDoc.getForm();
-
-    const pages = pdfDoc.getPages();
-    const page = pages[2]; // use 2nd page
+    // 2. Load PDF document & get interactive form
+    const pdfDoc = await PDFLib.PDFDocument.load(existingPdfBytes);
+    const form = pdfDoc.getForm(); // <-- FIXED: Form initialization added
 
 
     // FILL FORM FIELDS FROM LOCALSTORAGE HERE
