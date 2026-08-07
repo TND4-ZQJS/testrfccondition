@@ -1503,6 +1503,8 @@ async function fillPDF(templateFileName, action = 'download') {
     const pdfDoc = await PDFLib.PDFDocument.load(existingPdfBytes);
     const form = pdfDoc.getForm(); // <-- FIXED: Form initialization added
 
+    const pages = pdfDoc.getPages();
+    const page = pages[2]; // use 3rd page
 
     // FILL FORM FIELDS FROM LOCALSTORAGE HERE
 const fieldNames = [
