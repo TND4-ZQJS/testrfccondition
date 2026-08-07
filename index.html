@@ -1109,6 +1109,7 @@ function safeSetField(form, fieldName, value) {
     console.error(`Error setting field ${fieldName}`, err);
   }
 }
+/* ---------- (END) UNIVERSAL HELPER FUNCTION ---------- */
 
 /* ---------- SYNC HELPER ---------- */
 document.addEventListener("DOMContentLoaded", () => {
@@ -1191,6 +1192,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }, 50);
 });
+/* ---------- (END) SYNC HELPER ---------- */
 
 /* ---------- SIGNED DATE HELPER ---------- */  
 function setSignedDateToday() {
@@ -1230,8 +1232,9 @@ function saveToLocalStorage(id, value) {
     console.error('Failed to save to localStorage:', e);
   }
 }  
+/* ---------- (END) SIGNED DATE HELPER ---------- */  
 
-/* ---------- DISPLAY UPDATE ---------- */
+/* ---------- SIGNATURE NAME DISPLAY UPDATE ---------- */
 document.addEventListener("DOMContentLoaded", () => {
   const fieldMap = {
     "Complx_Sign_PO_Name":  "Complx_PO_Name_Display",
@@ -1275,6 +1278,7 @@ document.addEventListener("DOMContentLoaded", () => {
   refreshAllDisplays();
   setTimeout(refreshAllDisplays, 100);
 });
+/* ---------- (END) SIGNATURE NAME DISPLAY UPDATE ---------- */
 
 /* ---------- SIGNATURE CANVAS LOGIC ---------- */
 let sigTarget = null;
@@ -1427,6 +1431,7 @@ window.addEventListener("DOMContentLoaded", ()=>{
     if(saved && preview){ preview.innerHTML = `<img alt="Signature ${role}" src="${saved}">`; }
   });
 });
+/* ---------- (END) SIGNATURE CANVAS LOGIC ---------- */
 
 /* ---------- GENERATE PDF ---------- */
 async function fillPDF(templateFileName = PDF_FILENAME, action = 'download') {
@@ -1545,6 +1550,7 @@ async function fillPDF(templateFileName = PDF_FILENAME, action = 'download') {
     actionButtons.forEach(btn => btn.disabled = false);
   }
 }
+/* ---------- (END) GENERATE PDF ---------- */
 
 /* ---------- RESET ALL DATA ---------- */
 function resetAllData() {
@@ -1583,6 +1589,7 @@ window.addEventListener("scroll", () => {
 function scrollToTop() {
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
+/* ---------- (END) RESET ALL DATA ---------- */
 
 /* ---------- WIZARD TRACKER LOGIC ---------- */
 const steps = document.querySelectorAll(".wizard-step");
@@ -1633,6 +1640,7 @@ function changeStep(n) {
 document.addEventListener("DOMContentLoaded", () => {
   navigateTo(currentStep);
 });
+/* ----------(END) WIZARD TRACKER LOGIC ---------- */
 
 // iOS-Style Back Navigation Interceptor
 const backToMainLink = document.getElementById("backToMainLink");
@@ -1646,7 +1654,9 @@ if (backToMainLink) {
     }
   });
 }  
-
+// (END) iOS-Style Back Navigation Interceptor
+    
+// Top Navigator Menu logic
 function toggleMobileMenu() {
   const navMenu = document.getElementById('navMenu');
   if (navMenu) navMenu.classList.toggle('show');
