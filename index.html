@@ -987,11 +987,6 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
-
-  // Auto-bind input storage restoration
-  document.querySelectorAll("input, select, textarea").forEach(autoBindSave);
-});
-
 // ---------- EXPORT FILTER LOGIC ----------
 function shouldIncludeFieldByUI(fieldId) {
   const el = document.getElementById(fieldId);
