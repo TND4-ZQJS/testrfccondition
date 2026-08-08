@@ -4,6 +4,8 @@
 <meta charset="utf-8" />
 <title>Magic Filler - CI Pro Universen</title>
 <meta name="viewport" content="width=device-width,initial-scale=1" />
+<link rel="stylesheet" href="/css/css-fillerpages.css">
+<link rel="stylesheet" href="/css/css-subpages.css">    
 <style>
 /* ============================================================
     GLOBAL DESIGN VARIABLES (Unified Workspace Framework)
@@ -685,7 +687,7 @@ a.back-link svg {margin-left: -6px;transform: translateY(0.5px);stroke: #007aff 
           <label class="inline">Rider(1) Name<input id="Complx_ReduceFA_Rider_Name1" class="persist" name="Paymentmethodtype" type="text" placeholder="Enter rider name"></label>
         </div>
         <div>
-          <label class="inline">Reduce Rider(1) Face Amount to<input id="Complx_ReduceFA_Rider_FA1" class="persist" name="Paymentmethodtype" type="text" placeholder="Enter face amount"></label>
+          <label class="inline">Reduce Rider(1) Face Amount to<input id="Complx_ReduceFA_Rider1_FA1" class="persist" name="Paymentmethodtype" type="text" placeholder="Enter face amount"></label>
         </div>
       </div>
     </div>
@@ -693,10 +695,10 @@ a.back-link svg {margin-left: -6px;transform: translateY(0.5px);stroke: #007aff 
     <div class="section">
       <div class="grid-2">
         <div>
-          <label class="inline">Rider(2) Name<input id="Complx_ReduceFA_Rider_Name2" class="persist" name="Paymentmethodtype" type="text" placeholder="Enter rider name"></label>
+          <label class="inline">Rider(2) Name<input id="Complx_ReduceFA_Rider1_Name2" class="persist" name="Paymentmethodtype" type="text" placeholder="Enter rider name"></label>
         </div>
         <div>
-          <label class="inline">Reduce Rider(2) Face Amount to<input id="Complx_ReduceFA_Rider_FA2" class="persist" name="Paymentmethodtype" type="text" placeholder="Enter face amount"></label>
+          <label class="inline">Reduce Rider(2) Face Amount to<input id="Complx_ReduceFA_Rider1_FA2" class="persist" name="Paymentmethodtype" type="text" placeholder="Enter face amount"></label>
         </div>
       </div>
     </div>
@@ -704,10 +706,10 @@ a.back-link svg {margin-left: -6px;transform: translateY(0.5px);stroke: #007aff 
     <div class="section">
       <div class="grid-2">
         <div>
-          <label class="inline">Rider(3) Name<input id="Complx_ReduceFA_Rider_Name3" class="persist" name="Paymentmethodtype" type="text" placeholder="Enter rider name"></label>
+          <label class="inline">Rider(3) Name<input id="Complx_ReduceFA_Rider1_Name3" class="persist" name="Paymentmethodtype" type="text" placeholder="Enter rider name"></label>
         </div>
         <div>
-          <label class="inline">Reduce Rider(3) Face Amount to<input id="Complx_ReduceFA_Rider_FA3" class="persist" name="Paymentmethodtype" type="text" placeholder="Enter face amount"></label>
+          <label class="inline">Reduce Rider(3) Face Amount to<input id="Complx_ReduceFA_Rider1_FA3" class="persist" name="Paymentmethodtype" type="text" placeholder="Enter face amount"></label>
         </div>
       </div>
     </div>
@@ -1501,6 +1503,7 @@ async function fillPDF(templateFileName, action = 'download') {
     safeCheck(form, "Complx_IncreaseFA_Basic_Yes", getChecked("Complx_IncreaseFA_Rider_Yes"));
     safeCheck(form, "Complx_AddRider_Yes", getChecked("Complx_AddRider_Yes"));
     safeCheck(form, "Complx_ReduceFA_Basic_Yes", getChecked("Complx_ReduceFA_Basic_Yes"));
+    safeCheck(form, "Complx_ReduceFA_Rider_Yes", getChecked("Complx_ReduceFA_Rider_Yes"));
     safeCheck(form, "Complx_CancelRider_Yes", getChecked("Complx_CancelRider_Yes"));
     safeCheck(form, "Complx_Review_Rating", getChecked("Complx_Review_Rating"));
     safeCheck(form, "Complx_Review_Exclusion", getChecked("Complx_Review_Exclusion"));
@@ -1537,7 +1540,6 @@ async function fillPDF(templateFileName, action = 'download') {
     safeSetText(form, "Complx_ReduceFA_Rider_Name1", getValue("Complx_ReduceFA_Rider_Name1"));     
     safeSetText(form, "Complx_ReduceFA_Rider1_FA1", getValue("Complx_ReduceFA_Rider1_FA1"));
     safeSetText(form, "Complx_ReduceFA_Rider1_Name2", getValue("Complx_ReduceFA_Rider1_Name2")); 
-    safeSetText(form, "Complx_ReduceFA_Rider1_Name2", getValue("Complx_ReduceFA_Rider1_Name2"));
     safeSetText(form, "Complx_ReduceFA_Rider1_FA2", getValue("Complx_ReduceFA_Rider1_FA2"));       
     safeSetText(form, "Complx_ReduceFA_Rider1_Name3", getValue("Complx_ReduceFA_Rider1_Name3")); 
     safeSetText(form, "Complx_ReduceFA_Rider1_FA3", getValue("Complx_ReduceFA_Rider1_FA3"));
