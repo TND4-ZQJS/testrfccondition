@@ -1287,8 +1287,9 @@ document.addEventListener("DOMContentLoaded", () => {
 let sigTarget = null;
 const sigModal = $("sigModal");
 const sigCanvas = $("sigCanvas");
-const sigCtx = sigCanvas.getContext("2d");
+const sigCtx = sigCanvas ? sigCanvas.getContext("2d") : null;
 
+// Initialize SignaturePad
 const signaturePad = new SignaturePad(sigCanvas, {
   minWidth: 0.7,
   maxWidth: 2.5,
@@ -1297,8 +1298,10 @@ const signaturePad = new SignaturePad(sigCanvas, {
 });
 
 function resizeCanvas() {
+  if (!sigCanvas) return;
   const ratio = Math.max(window.devicePixelRatio || 1, 1);
-  const storageKey = sigTarget ? `sig_${FORM_ID}_${sigTarget}` : null;
+  const formId = typeof FORM_ID !== "undefined" ? FORM_ID : "Complx";
+  const storageKey = sigTarget ? `sig_${formId}_${sigTarget}` : null;
   const savedFromStorage = storageKey ? localStorage.getItem(storageKey) : null;
 
   sigCanvas.width = sigCanvas.offsetWidth * ratio;
@@ -1317,27 +1320,38 @@ function resizeCanvas() {
 function openSig({ role, title }) {
   sigTarget = role;
   if ($("sigModalTitle")) $("sigModalTitle").textContent = title || `Sign: ${role}`;
-  sigModal.style.display = "block";
-  sigModal.setAttribute("aria-hidden", "false");
-  requestAnimationFrame(resizeCanvas);
+  
+  if (sigModal) {
+    sigModal.style.display = "block";
+    sigModal.setAttribute("aria-hidden", "false");
+  }
+  
+  requestAnimationFrame(() => {
+    resizeCanvas();
+  });
 }
 
 function closeSigModal() {
-  sigModal.style.display = "none";
-  sigModal.setAttribute("aria-hidden", "true");
+  if (sigModal) {
+    sigModal.style.display = "none";
+    sigModal.setAttribute("aria-hidden", "true");
+  }
   sigTarget = null;
 }
 
+// Modal Action Handlers
 $("sigDone")?.addEventListener("click", () => {
   if (!sigTarget || signaturePad.isEmpty()) return;
 
+  const formId = typeof FORM_ID !== "undefined" ? FORM_ID : "Complx";
   const dataURL = sigCanvas.toDataURL("image/png");
-  localStorage.setItem(`sig_${FORM_ID}_${sigTarget}`, dataURL);
+  
+  localStorage.setItem(`sig_${formId}_${sigTarget}`, dataURL);
   
   const block = document.querySelector(`[data-sig-role="${sigTarget}"]`);
   const previewDiv = block?.querySelector("[data-sig-preview]");
   if (previewDiv) {
-    previewDiv.innerHTML = `<img src="${dataURL}" style="max-height:100%; width:auto;" alt="Signature ${sigTarget}">`;
+    previewDiv.innerHTML = `<img src="${dataURL}" style="max-height:100%; width:auto; pointer-events:none;" alt="Signature ${sigTarget}">`;
   }
   closeSigModal();
 });
@@ -1346,7 +1360,10 @@ $("sigClear")?.addEventListener("click", () => signaturePad.clear());
 $("sigCancel")?.addEventListener("click", closeSigModal);
 window.addEventListener("resize", resizeCanvas);
 
+/* ---------- Initialize Signature Fields ---------- */
 function initSignatureFields() {
+  const formId = typeof FORM_ID !== "undefined" ? FORM_ID : "Complx";
+
   document.querySelectorAll("[data-sig-role]").forEach((block) => {
     const role = block.dataset.sigRole;
     const title = block.dataset.sigTitle || `Sign: ${role}`;
@@ -1354,25 +1371,33 @@ function initSignatureFields() {
     const clearBtn = block.querySelector("[data-sig-clear]");
     const defaultText = `<span>Tap to Sign (${role.charAt(0).toUpperCase() + role.slice(1)})</span>`;
 
-    previewEl?.addEventListener("click", () => openSig({ role, title }));
+    if (previewEl) {
+      previewEl.style.cursor = "pointer";
+      previewEl.addEventListener("click", (e) => {
+        e.preventDefault();
+        openSig({ role, title });
+      });
+    }
 
-    clearBtn?.addEventListener("click", () => {
-      localStorage.removeItem(`sig_${FORM_ID}_${role}`);
-      if (previewEl) previewEl.innerHTML = defaultText;
-    });
+    if (clearBtn) {
+      clearBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        localStorage.removeItem(`sig_${formId}_${role}`);
+        if (previewEl) previewEl.innerHTML = defaultText;
+      });
+    }
 
-    const saved = localStorage.getItem(`sig_${FORM_ID}_${role}`);
+    const saved = localStorage.getItem(`sig_${formId}_${role}`) || localStorage.getItem(`sig_${role}`);
     if (saved && previewEl) {
-      previewEl.innerHTML = `<img src="${saved}" style="max-height:100%; width:auto;" alt="Signature ${role}">`;
+      previewEl.innerHTML = `<img src="${saved}" style="max-height:100%; width:auto; pointer-events:none;" alt="Signature ${role}">`;
     }
   });
 }
 
+/* ---------- PDF Embedding Engine ---------- */
 async function embedSignatureToPdf(pdfDoc, pageIndex, options) {
   const { role, x, y, factor = 0.40 } = options;
 
-  // 1. Construct localStorage key matching your signature engine format
-  // Tries `sig_${FORM_ID}_${role}`, then `sig_${role}`, then `${role}`
   const formId = typeof FORM_ID !== "undefined" ? FORM_ID : "Complx";
   const primaryKey = `sig_${formId}_${role}`;
   
@@ -1380,24 +1405,20 @@ async function embedSignatureToPdf(pdfDoc, pageIndex, options) {
                 || localStorage.getItem(`sig_${role}`) 
                 || localStorage.getItem(role);
 
-  // 2. Validate data format
   if (!sigDataUri || !sigDataUri.startsWith("data:image/png")) {
     console.warn(`No valid PNG signature found for role: ${role} (key tried: ${primaryKey})`);
     return;
   }
 
   try {
-    // 3. Embed PNG into pdf-lib
     const img = await pdfDoc.embedPng(sigDataUri);
     const originalSize = img.size();
 
-    // 4. Calculate dimensions maintaining aspect ratio
     const baseWidth = 250;
     const aspectRatio = originalSize.width / originalSize.height;
     const renderWidth = baseWidth * factor;
     const renderHeight = (baseWidth / aspectRatio) * factor;
 
-    // 5. Get target page (pdf-lib pages are 0-indexed)
     const pages = pdfDoc.getPages();
     const targetPage = pages[pageIndex];
 
@@ -1415,6 +1436,23 @@ async function embedSignatureToPdf(pdfDoc, pageIndex, options) {
     console.error(`Error embedding signature for role ${role}:`, err);
   }
 }
+
+/* ---------- AUTO INITIALIZE BOTH ON LOAD ---------- */
+function initApp() {
+  if (typeof loadFromLocalStorage === "function") {
+    loadFromLocalStorage();
+  }
+  if (typeof initSignatureFields === "function") {
+    initSignatureFields();
+  }
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initApp);
+} else {
+  initApp();
+}
+/* ---------- (END) Signature Engine ---------- */    
     
 /* ---------- Generate PDF ---------- */
 async function fillPDF(templateFileName, action = 'download') {
