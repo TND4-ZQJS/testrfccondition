@@ -826,54 +826,54 @@ a.back-link svg {margin-left: -6px;transform: translateY(0.5px);stroke: #007aff 
         </div>
   </section>
 
-  <!-- SECTION: Owner/Policyowner Signature -->
-  <section class="section">
-    <h2>Signature of Policy Owner/Assignee</h2>
-    <div class="row">
+  <!-- SECTION: Policy Owner Signature -->
+  <section class="section" data-sig-role="owner" data-sig-title="Sign: Policy Owner">
+    <h2>Policy Owner Signature</h2>
+<div class="row">
   <label style="flex:1">Name: 
-    <span id="Complx_PO_Name_Display" style="font-weight: 600;">-</span>
+    <span id="GCPWD_EBank_Name_Display" style="font-weight: 600;">-</span>
   </label>
-  </div>
+</div>
 
-        <div class="sig-preview" id="preview_simple_owner" onclick="openSig('simple_owner')">
-      <span>Tap to Sign (Policyowner / Assignee)</span>
+    <div class="sig-preview" data-sig-preview>
+      <span>Tap to Sign (Policy Owner)</span>
     </div>
     <div class="row">
-      <button id="clearPreview_Simple_Owner" class="secondary" type="button">Clear Signature</button>
+      <button class="secondary" type="button" data-sig-clear>Clear Signature</button>
     </div>
   </section>
 
-  <!-- SECTION: Witness Signature -->
-  <section class="section">
-    <h2>Signature of Witness</h2>
-        <div class="row">
+   <!-- SECTION: Witness Signature -->
+  <section class="section" data-sig-role="witness" data-sig-title="Sign: Witness">
+    <h3>Witness Signature</h3>
+<div class="row">
   <label style="flex:1">Name: 
-    <span id="Complx_Witness_Name_Display" style="font-weight: 600;">-</span>
+    <span id="GCPWD_Witness_Name_Display" style="font-weight: 600;">-</span>
   </label>
-  </div>
+</div>
 
-    <div class="sig-preview" id="preview_simple_witness" onclick="openSig('simple_witness')">
+    <div class="sig-preview" data-sig-preview>
       <span>Tap to Sign (Witness)</span>
-    </div>
+    </div>  
     <div class="row">
-      <button id="clearPreview_Simple_Witness" class="secondary" type="button">Clear Signature</button>
+      <button class="secondary" type="button" data-sig-clear>Clear Signature</button>
     </div>
   </section>
   
-    <!-- SECTION: Assignee -->
-  <section class="section">
-    <h2>Signature of Trustee(s)/Nominee(s)</h2>
-  <div class="row">
+  <!-- SECTION: Trustee Signature -->
+  <section class="section" data-sig-role="trustee" data-sig-title="Sign: Trustee">
+    <h3>Trustee Signature</h3>
+<div class="row">
   <label style="flex:1">Name: 
-    <span id="Complx_Trustee_Name_Display" style="font-weight: 600;">-</span>
+    <span id="GCPWD_Trustee_Name_Display" style="font-weight: 600;">-</span>
   </label>
-  </div>
+</div>
 
-    <div class="sig-preview" id="preview_simple_assignee" onclick="openSig('simple_assignee')">
-      <span>Tap to Sign (Trustee/Nominee)</span>
-    </div>
+    <div class="sig-preview" data-sig-preview>
+      <span>Tap to Sign (Trustee)</span>
+    </div>  
     <div class="row">
-      <button id="clearPreview_Simple_Assignee" class="secondary" type="button">Clear Signature</button>
+      <button class="secondary" type="button" data-sig-clear>Clear Signature</button>
     </div>
   </section>
 
@@ -943,13 +943,19 @@ a.back-link svg {margin-left: -6px;transform: translateY(0.5px);stroke: #007aff 
 <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
 <script>
 
-  /* ---------- HELPER ---------- */
-function $(id) {
-  return document.getElementById(id);
+/* ---------- DOM Helpers ---------- */
+const $ = (id) => document.getElementById(id);
+
+function safeSetText(form, name, text){
+  try{ form.getTextField(name).setText(String(text || "")); } catch(e){ }
+}
+function safeCheck(form, name, checked){
+  try{ const cb = form.getCheckBox(name); if (checked) cb.check(); else cb.uncheck(); } catch(e){ }
 }
   
 /* ---------- CONFIG ---------- */
 const PDF_FILENAME = "Request-For-Change-of-Policy-Condition_LF5189_fillable.pdf";
+const FORM_ID = "Complx";
 
 // ---------- SECTION CONTROL CONFIG ----------
 const CONTROLLER_BY_SECTION = {
@@ -1281,256 +1287,275 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 /* ---------- (END) SIGNATURE NAME DISPLAY UPDATE ---------- */
 
-/* ---------- SIGNATURE CANVAS LOGIC ---------- */
+/* ---------- Signature Engine ---------- */
 let sigTarget = null;
 const sigModal = $("sigModal");
 const sigCanvas = $("sigCanvas");
-const sigCtx = sigCanvas ? sigCanvas.getContext("2d") : null;
-let drawing = false;
-let scaleX = 1, scaleY = 1;
+const sigCtx = sigCanvas.getContext("2d");
 
-function resizeSigCanvas(){
-  if (!sigCanvas || !sigCtx) return;
-  const dpr = window.devicePixelRatio || 1;
-  const cssWidth = sigCanvas.clientWidth || sigCanvas.parentElement.clientWidth || 560;
-  const cssHeight = sigCanvas.clientHeight || 220;
-  sigCanvas.width = Math.max(1, Math.floor(cssWidth * dpr));
-  sigCanvas.height = Math.max(1, Math.floor(cssHeight * dpr));
-  sigCtx.setTransform(1,0,0,1,0,0);
-  sigCtx.scale(dpr, dpr);
-  sigCtx.lineWidth = 2;
-  sigCtx.lineCap = "round";
-  sigCtx.strokeStyle = "#000";
-  scaleX = sigCanvas.width / (sigCanvas.getBoundingClientRect().width || cssWidth);
-  scaleY = sigCanvas.height / (sigCanvas.getBoundingClientRect().height || cssHeight);
+const signaturePad = new SignaturePad(sigCanvas, {
+  minWidth: 0.7,
+  maxWidth: 2.5,
+  penColor: "black",
+  backgroundColor: "rgba(0,0,0,0)"
+});
+
+function resizeCanvas() {
+  const ratio = Math.max(window.devicePixelRatio || 1, 1);
+  const storageKey = sigTarget ? `sig_${FORM_ID}_${sigTarget}` : null;
+  const savedFromStorage = storageKey ? localStorage.getItem(storageKey) : null;
+
+  sigCanvas.width = sigCanvas.offsetWidth * ratio;
+  sigCanvas.height = sigCanvas.offsetHeight * ratio;
+  sigCtx.setTransform(ratio, 0, 0, ratio, 0, 0);
+
+  signaturePad.clear();
+
+  if (savedFromStorage) {
+    const img = new Image();
+    img.onload = () => sigCtx.drawImage(img, 0, 0, sigCanvas.offsetWidth, sigCanvas.offsetHeight);
+    img.src = savedFromStorage;
+  }
 }
 
-function openSig(target){
-  sigTarget = target;
-  const titleEl = $("sigModalTitle");
-  if (titleEl) {
-    if (target === 'simple_owner') titleEl.textContent = "Sign: Policy Owner";
-    else if (target === 'simple_witness') titleEl.textContent = "Sign: Witness";
-    else if (target === 'simple_assignee') titleEl.textContent = "Sign: Trustee";
-  }
+function openSig({ role, title }) {
+  sigTarget = role;
+  if ($("sigModalTitle")) $("sigModalTitle").textContent = title || `Sign: ${role}`;
+  sigModal.style.display = "block";
+  sigModal.setAttribute("aria-hidden", "false");
+  requestAnimationFrame(resizeCanvas);
+}
 
-  if (sigModal) {
-    sigModal.style.display = "block";
-    sigModal.setAttribute("aria-hidden", "false");
-  }
+function closeSigModal() {
+  sigModal.style.display = "none";
+  sigModal.setAttribute("aria-hidden", "true");
+  sigTarget = null;
+}
 
-  requestAnimationFrame(()=>{
-    resizeSigCanvas();
-    if (sigCtx) sigCtx.clearRect(0, 0, sigCanvas.width, sigCanvas.height);
-    const existing = localStorage.getItem("sig_"+target);
-    if (existing && sigCtx){
-      const img = new Image();
-      img.onload = ()=>{
-        sigCtx.drawImage(img, 0, 0, sigCanvas.width/scaleX, sigCanvas.height/scaleY);
-      };
-      img.src = existing;
+$("sigDone")?.addEventListener("click", () => {
+  if (!sigTarget || signaturePad.isEmpty()) return;
+
+  const dataURL = sigCanvas.toDataURL("image/png");
+  localStorage.setItem(`sig_${FORM_ID}_${sigTarget}`, dataURL);
+  
+  const block = document.querySelector(`[data-sig-role="${sigTarget}"]`);
+  const previewDiv = block?.querySelector("[data-sig-preview]");
+  if (previewDiv) {
+    previewDiv.innerHTML = `<img src="${dataURL}" style="max-height:100%; width:auto;" alt="Signature ${sigTarget}">`;
+  }
+  closeSigModal();
+});
+
+$("sigClear")?.addEventListener("click", () => signaturePad.clear());
+$("sigCancel")?.addEventListener("click", closeSigModal);
+window.addEventListener("resize", resizeCanvas);
+
+function initSignatureFields() {
+  document.querySelectorAll("[data-sig-role]").forEach((block) => {
+    const role = block.dataset.sigRole;
+    const title = block.dataset.sigTitle || `Sign: ${role}`;
+    const previewEl = block.querySelector("[data-sig-preview]");
+    const clearBtn = block.querySelector("[data-sig-clear]");
+    const defaultText = `<span>Tap to Sign (${role.charAt(0).toUpperCase() + role.slice(1)})</span>`;
+
+    previewEl?.addEventListener("click", () => openSig({ role, title }));
+
+    clearBtn?.addEventListener("click", () => {
+      localStorage.removeItem(`sig_${FORM_ID}_${role}`);
+      if (previewEl) previewEl.innerHTML = defaultText;
+    });
+
+    const saved = localStorage.getItem(`sig_${FORM_ID}_${role}`);
+    if (saved && previewEl) {
+      previewEl.innerHTML = `<img src="${saved}" style="max-height:100%; width:auto;" alt="Signature ${role}">`;
     }
   });
 }
 
-$("sigClear")?.addEventListener("click", ()=>{
-  if (sigCtx) sigCtx.clearRect(0,0,sigCanvas.width, sigCanvas.height);
-});
+async function embedSignatureToPdf(pdfDoc, pageIndex, options) {
+  const { role, x, y, factor = 0.40 } = options;
 
-$("sigCancel")?.addEventListener("click", closeSigModal);
+  // 1. Construct localStorage key matching your signature engine format
+  // Tries `sig_${FORM_ID}_${role}`, then `sig_${role}`, then `${role}`
+  const formId = typeof FORM_ID !== "undefined" ? FORM_ID : "Complx";
+  const primaryKey = `sig_${formId}_${role}`;
+  
+  let sigDataUri = localStorage.getItem(primaryKey) 
+                || localStorage.getItem(`sig_${role}`) 
+                || localStorage.getItem(role);
 
-function closeSigModal(){
-  if (sigModal) {
-    sigModal.style.display = "none";
-    sigModal.setAttribute("aria-hidden", "true");
+  // 2. Validate data format
+  if (!sigDataUri || !sigDataUri.startsWith("data:image/png")) {
+    console.warn(`No valid PNG signature found for role: ${role} (key tried: ${primaryKey})`);
+    return;
   }
-  sigTarget = null;
-}
 
-$("sigDone")?.addEventListener("click", ()=>{
-  if(!sigTarget || !sigCanvas) return;
-  const dataURL = sigCanvas.toDataURL("image/png");
-  localStorage.setItem("sig_"+sigTarget, dataURL);
-  const preview = $("preview_"+sigTarget);
-  if (preview) preview.innerHTML = `<img alt="Signature ${sigTarget}" src="${dataURL}">`;
-  closeSigModal();
-});
+  try {
+    // 3. Embed PNG into pdf-lib
+    const img = await pdfDoc.embedPng(sigDataUri);
+    const originalSize = img.size();
 
-function getPos(e){
-  const rect = sigCanvas.getBoundingClientRect();
-  if(e.touches && e.touches[0]){
-    return { x: (e.touches[0].clientX - rect.left), y: (e.touches[0].clientY - rect.top) };
+    // 4. Calculate dimensions maintaining aspect ratio
+    const baseWidth = 250;
+    const aspectRatio = originalSize.width / originalSize.height;
+    const renderWidth = baseWidth * factor;
+    const renderHeight = (baseWidth / aspectRatio) * factor;
+
+    // 5. Get target page (pdf-lib pages are 0-indexed)
+    const pages = pdfDoc.getPages();
+    const targetPage = pages[pageIndex];
+
+    if (targetPage) {
+      targetPage.drawImage(img, {
+        x: x,
+        y: y,
+        width: renderWidth,
+        height: renderHeight
+      });
+    } else {
+      console.error(`Page index ${pageIndex} does not exist in the PDF template.`);
+    }
+  } catch (err) {
+    console.error(`Error embedding signature for role ${role}:`, err);
   }
-  return { x: (e.clientX - rect.left), y: (e.clientY - rect.top) };
 }
-
-function startDraw(e){
-  if (!sigCtx) return;
-  drawing = true;
-  sigCtx.beginPath();
-  const {x,y}=getPos(e);
-  sigCtx.moveTo(x, y);
-  e.preventDefault?.();
-}
-
-function endDraw(){ 
-  if (!sigCtx) return;
-  drawing = false; 
-  sigCtx.beginPath(); 
-}
-
-function moveDraw(e){
-  if(!drawing || !sigCtx) return;
-  const {x,y} = getPos(e);
-  sigCtx.lineTo(x, y);
-  sigCtx.stroke();
-  sigCtx.beginPath();
-  sigCtx.moveTo(x, y);
-  e.preventDefault?.();
-}
-
-if (sigCanvas) {
-  sigCanvas.addEventListener("mousedown", startDraw);
-  sigCanvas.addEventListener("mousemove", moveDraw);
-  window.addEventListener("mouseup", endDraw);
-  sigCanvas.addEventListener("touchstart", startDraw, {passive:false});
-  sigCanvas.addEventListener("touchmove", moveDraw, {passive:false});
-  sigCanvas.addEventListener("touchend", endDraw);
-}
-
-window.addEventListener("resize", ()=> {
-  if(sigModal && sigModal.getAttribute("aria-hidden")==="false"){ 
-    const img = new Image();
-    img.onload = ()=>{
-      resizeSigCanvas();
-      if (sigCtx) sigCtx.drawImage(img, 0, 0, sigCanvas.width/scaleX, sigCanvas.height/scaleY);
-    };
-    img.src = sigCanvas.toDataURL("image/png");
-  }
-});
-
-$("clearPreview_Simple_Owner")?.addEventListener("click", ()=>{
-  localStorage.removeItem("sig_simple_owner");
-  const el = $("preview_simple_owner");
-  if (el) el.innerHTML = `<span>Tap to Sign (Policyowner/Assignee)</span>`;
-});
-$("clearPreview_Simple_Witness")?.addEventListener("click", ()=>{
-  localStorage.removeItem("sig_simple_witness");
-  const el = $("preview_simple_witness");
-  if (el) el.innerHTML = `<span>Tap to Sign (Witness)</span>`;
-});
-$("clearPreview_Simple_Assignee")?.addEventListener("click", ()=>{
-  localStorage.removeItem("sig_simple_assignee");
-  const el = $("preview_simple_assignee");
-  if (el) el.innerHTML = `<span>Tap to Sign (Trustee/Nominee)</span>`;
-});
-
-window.addEventListener("DOMContentLoaded", ()=>{
-  ["owner","witness","assignee"].forEach(role=>{
-    const saved = localStorage.getItem("sig_simple_"+role);
-    const preview = $("preview_simple_"+role);
-    if(saved && preview){ preview.innerHTML = `<img alt="Signature ${role}" src="${saved}">`; }
-  });
-});
-/* ---------- (END) SIGNATURE CANVAS LOGIC ---------- */
-
-/* ---------- GENERATE PDF ---------- */
-async function fillPDF(templateFileName = PDF_FILENAME, action = 'download') {
-  const actionButtons = document.querySelectorAll('.actions button, button');
+    
+/* ---------- Generate PDF ---------- */
+async function fillPDF(templateFileName, action = 'download') {
+  // Grab action buttons to disable them during generation
+  const actionButtons = document.querySelectorAll('.actions button');
   actionButtons.forEach(btn => btn.disabled = true);
 
+  // Helper function to safely fetch input DOM values without crashing on missing elements
   const getValue = (id) => {
     const el = document.getElementById(id);
     return el ? el.value : "";
   };
 
+  const getChecked = (id) => {
+    const el = document.getElementById(id);
+    return el ? el.checked : false;
+  };
+
   try {
+    // 1. Fetch template PDF
     const response = await fetch(templateFileName);
     if (!response.ok) {
       throw new Error(`Failed to load template file: ${templateFileName}`);
     }
     const existingPdfBytes = await response.arrayBuffer();
 
+    // 2. Load PDF document & get interactive form
     const pdfDoc = await PDFLib.PDFDocument.load(existingPdfBytes);
-    const form = pdfDoc.getForm();
-    const pages = pdfDoc.getPages();
-    const page = pages[2] || pages[0]; // FIX: Defined page target
+    const form = pdfDoc.getForm(); // <-- FIXED: Form initialization added
 
-    const fieldNames = [
-      "Complx_Insured_Name", "Complx_PolicyNo", "Complx_Insured_NIRC",
-      "Complx_Occupation_New", "Complx_Occupation_Comp", "Complx_Occupation_Duty",
-      "Complx_Occupation_MM", "Complx_Occupation_YYYY", "Complx_Occupation_Nature",
-      "Complx_ReducePremium_Basic_Yes", "Complx_ReducePremium_Basic_Amt",
-      "Complx_ReducePremium_Topup_Yes", "Complx_ReducePremium_Topup_Amt",
-      "Complx_IncreaseFA_Basic", "Complx_IncreaseFA_Basic_Yes", "Complx_IncreaseFA_Rider_Yes",
-      "Complx_IncreaseFA_Rider1_Name", "Complx_IncreaseFA_Rider1_FA",
-      "Complx_IncreaseFA_Rider2_Name", "Complx_IncreaseFA_Rider3_Name",
-      "Complx_IncreaseFA_Rider2_FA", "Complx_IncreaseFA_Rider3_FA", 
-      "Complx_AddRider_Yes", "Complx_AddRider1_Name", "Complx_AddRider1_Term",
-      "Complx_AddRider1_FA", "Complx_AddRider2_Name", "Complx_AddRider3_Name",
-      "Complx_AddRider2_Term", "Complx_AddRider3_Term", "Complx_AddRider2_FA",
-      "Complx_AddRider3_FA", "Complx_Review_Rating", "Complx_Review_Exclusion",
-      "Complx_ReduceFA_Basic_Yes", "Complx_ReduceFA_Basic_Amt", "Complx_ReduceFA_Rider_Yes",
-      "Complx_ReduceFA_Rider1_Name2", "Complx_ReduceFA_Rider1_Name3", "Complx_ReduceFA_Rider1_FA1",
-      "Complx_ReduceFA_Rider1_FA2", "Complx_ReduceFA_Rider1_FA3", "Complx_CancelRider_Yes",
-      "Complx_ReduceFA_Rider_Name1", "Complx_CancelRider_Name1", "Complx_CancelRider_Name2",
-      "Complx_CancelRider_Name3", "Complx_CancelRider_Name4", "Complx_CancelRider_Name5",
-      "Complx_CancelRider_Name6", "Complx_Others_Line1", "Complx_Others_Line2",
-      "Complx_Others_Line3", "Complx_Others_Line4", "Complx_Sign_State",
-      "Complx_Sign_Day", "Complx_Sign_Month", "Complx_Sign_Year",
-      "Complx_Sign_PO_Name", "Complx_Sign_PO_NIRC", "Complx_Sign_Trustee_Name",
-      "Complx_Sign_Trustee_NIRC", "Complx_Sign_Witness_Name", "Complx_Sign_Witness_NIRC",
-      "Complx_Sign_Witness_Mobile"
-    ];
+// Policy and People
+    safeSetText(form, "Complx_Insured_Name", getValue("Complx_Insured_Name"));
+    safeSetText(form, "Complx_PolicyNo", getValue("Complx_PolicyNo"));
+    safeSetText(form, "Complx_Insured_NIRC", getValue("Complx_Insured_NIRC"));
+    safeSetText(form, "Complx_Sign_PO_Name", getValue("Complx_Sign_PO_Name"));
+    safeSetText(form, "Complx_Sign_PO_NIR", getValue("Complx_Sign_PO_NIR"));
+    safeSetText(form, "Complx_Sign_Trustee_Name", getValue("Complx_Sign_Trustee_Name"));
+    safeSetText(form, "Complx_Sign_Trustee_NIRC", getValue("Complx_Sign_Trustee_NIRC"));
+    safeSetText(form, "Complx_Sign_Witness_Name", getValue("Complx_Sign_Witness_Name"));
+    safeSetText(form, "Complx_Sign_Witness_NIRC", getValue("Complx_Sign_Witness_NIRC"));
+    safeSetText(form, "Complx_Sign_Witness_Mobile", getValue("Complx_Sign_Witness_Mobile"));
 
-    fieldNames.forEach(fieldName => {
-      if (!shouldIncludeFieldByUI(fieldName)) return;
-      const value = localStorage.getItem(fieldName);
-      safeSetField(form, fieldName, value);
-    });
+    // RFC Condition Checkboxes
+    safeCheck(form, "Complx_ReducePremium_Basic_Yes", getChecked("Complx_ReducePremium_Basic_Yes"));
+    safeCheck(form, "Complx_ReducePremium_Topup_Yes", getChecked("Complx_ReducePremium_Topup_Yes"));
+    safeCheck(form, "Complx_IncreaseFA_Basic_Yes", getChecked("Complx_IncreaseFA_Rider_Yes"));
+    safeCheck(form, "Complx_AddRider_Yes", getChecked("Complx_AddRider_Yes"));
+    safeCheck(form, "Complx_ReduceFA_Basic_Yes", getChecked("Complx_ReduceFA_Basic_Yes"));
+    safeCheck(form, "Complx_CancelRider_Yes", getChecked("Complx_CancelRider_Yes"));
+    safeCheck(form, "Complx_Review_Rating", getChecked("Complx_Review_Rating"));
+    safeCheck(form, "Complx_Review_Exclusion", getChecked("Complx_Review_Exclusion"));
+      
+    
+    // RFC Condition Enter Amount
+    safeSetText(form, "Complx_Occupation_New", getValue("Complx_Occupation_New"));
+    safeSetText(form, "Complx_Occupation_Comp", getValue("Complx_Occupation_Comp"));
+    safeSetText(form, "Complx_Occupation_Duty", getValue("Complx_Occupation_Duty"));
+    safeSetText(form, "Complx_Occupation_MM", getValue("Complx_Occupation_MM"));
+    safeSetText(form, "Complx_Occupation_YYYY", getValue("Complx_Occupation_YYYY"));  
+    safeSetText(form, "Complx_Occupation_Nature", getValue("Complx_Occupation_Nature"));
+      
+    safeSetText(form, "Complx_ReducePremium_Basic_Amt", getValue("Complx_ReducePremium_Basic_Amt"));
+    safeSetText(form, "Complx_ReducePremium_Topup_Amt", getValue("Complx_ReducePremium_Topup_Amt"));
+    safeSetText(form, "Complx_IncreaseFA_Rider1_Name", getValue("Complx_IncreaseFA_Rider1_Name"));
+    safeSetText(form, "Complx_IncreaseFA_Rider1_FA", getValue("Complx_IncreaseFA_Rider1_FA"));     
+    safeSetText(form, "Complx_IncreaseFA_Rider2_Name", getValue("Complx_IncreaseFA_Rider2_Name"));
+    safeSetText(form, "Complx_IncreaseFA_Rider2_FA", getValue("Complx_IncreaseFA_Rider2_FA"));
+    safeSetText(form, "Complx_IncreaseFA_Rider3_Name", getValue("Complx_IncreaseFA_Rider3_Name"));
+    safeSetText(form, "Complx_IncreaseFA_Rider3_FA", getValue("Complx_IncreaseFA_Rider3_FA"));
 
-    // Signature Rendering Helper
-    async function embedSignature(storageKey, previewId, posX, posY) {
-      const sigData = localStorage.getItem(storageKey);
-      if (!sigData) return;
-      try {
-        const img = await pdfDoc.embedPng(sigData);
-        const { width, height } = img.size();
-        const previewEl = document.getElementById(previewId);
-        const boxW = previewEl ? previewEl.offsetWidth : 100;
-        const boxH = previewEl ? previewEl.offsetHeight : 50;
+    safeSetText(form, "Complx_AddRider1_Name", getValue("Complx_AddRider1_Name"));
+    safeSetText(form, "Complx_AddRider1_Term", getValue("Complx_AddRider1_Term"));     
+    safeSetText(form, "Complx_AddRider1_FA", getValue("Complx_AddRider1_FA"));
+    safeSetText(form, "Complx_AddRider2_Name", getValue("Complx_AddRider2_Name")); 
+    safeSetText(form, "Complx_AddRider2_Term", getValue("Complx_AddRider2_Term"));
+    safeSetText(form, "Complx_AddRider2_FA", getValue("Complx_AddRider2_FA"));       
+    safeSetText(form, "Complx_AddRider3_Name", getValue("Complx_AddRider3_Name")); 
+    safeSetText(form, "Complx_AddRider3_Term", getValue("Complx_AddRider3_Term"));
+    safeSetText(form, "Complx_AddRider3_FA", getValue("Complx_AddRider3_FA"));  
 
-        const scale = Math.min(boxW / width, boxH / height);
-        let drawW = width * scale * 0.40;
-        let drawH = height * scale * 0.40;
+    safeSetText(form, "Complx_ReduceFA_Basic_Amt", getValue("Complx_ReduceFA_Basic_Amt"));
+    safeSetText(form, "Complx_ReduceFA_Rider_Name1", getValue("Complx_ReduceFA_Rider_Name1"));     
+    safeSetText(form, "Complx_ReduceFA_Rider1_FA1", getValue("Complx_ReduceFA_Rider1_FA1"));
+    safeSetText(form, "Complx_ReduceFA_Rider1_Name2", getValue("Complx_ReduceFA_Rider1_Name2")); 
+    safeSetText(form, "Complx_ReduceFA_Rider1_Name2", getValue("Complx_ReduceFA_Rider1_Name2"));
+    safeSetText(form, "Complx_ReduceFA_Rider1_FA2", getValue("Complx_ReduceFA_Rider1_FA2"));       
+    safeSetText(form, "Complx_ReduceFA_Rider1_Name3", getValue("Complx_ReduceFA_Rider1_Name3")); 
+    safeSetText(form, "Complx_ReduceFA_Rider1_FA3", getValue("Complx_ReduceFA_Rider1_FA3"));
+      
+    safeSetText(form, "Complx_CancelRider_Name1", getValue("Complx_CancelRider_Name1"));  
+    safeSetText(form, "Complx_CancelRider_Name2", getValue("Complx_CancelRider_Name2"));
+    safeSetText(form, "Complx_CancelRider_Name3", getValue("Complx_CancelRider_Name3")); 
+    safeSetText(form, "Complx_CancelRider_Name4", getValue("Complx_CancelRider_Name4"));
+    safeSetText(form, "Complx_CancelRider_Name5", getValue("Complx_CancelRider_Name5"));       
+    safeSetText(form, "Complx_CancelRider_Name6", getValue("Complx_CancelRider_Name6")); 
 
-        page.drawImage(img, { x: posX, y: posY, width: drawW, height: drawH });
-      } catch (e) {
-        console.error(`Error embedding signature ${storageKey}:`, e);
-      }
-    }
+    safeSetText(form, "Complx_Others_Line1", getValue("Complx_Others_Line1"));
+    safeSetText(form, "Complx_Others_Line2", getValue("Complx_Others_Line2"));       
+    safeSetText(form, "Complx_Others_Line3", getValue("Complx_Others_Line3")); 
+    safeSetText(form, "Complx_Others_Line4", getValue("Complx_Others_Line4")); 
 
-    await embedSignature("sig_simple_owner", "preview_simple_owner", 50, 620);
-    await embedSignature("sig_simple_witness", "preview_simple_witness", 410, 620);
-    await embedSignature("sig_simple_assignee", "preview_simple_assignee", 230, 620);
+    // Section C - Signing Details
+    safeSetText(form, "Complx_Sign_State", getValue("Complx_Sign_State"));
+    safeSetText(form, "Complx_Sign_Day", getValue("Complx_Sign_Day"));
+    safeSetText(form, "Complx_Sign_Month", getValue("Complx_Sign_Month"));
+    safeSetText(form, "Complx_Sign_Year", getValue("Complx_Sign_Year"));
 
+    // Embed Signatures (Note: 0-indexed page numbering)
+    // For Page 1 use 0, Page 2 use 1, Page 3 use 2
+    const targetPageIndex = 2; // Adjust this index to match the target page in your PDF template
+
+    await embedSignatureToPdf(pdfDoc, targetPageIndex, { role: "owner",   x: 50,  y: 520, factor: 0.50 });
+    await embedSignatureToPdf(pdfDoc, targetPageIndex, { role: "trustee", x: 240, y: 520, factor: 0.50 });
+    await embedSignatureToPdf(pdfDoc, targetPageIndex, { role: "witness", x: 420, y: 520, factor: 0.50 });
+
+
+    // 3. Save modified PDF bytes & create Blob URL
     const pdfBytes = await pdfDoc.save();
     const blob = new Blob([pdfBytes], { type: "application/pdf" });
     const url = URL.createObjectURL(blob);
 
+    // 4. Construct output filename with policy number fallback
     const policyVal = getValue("Complx_PolicyNo");
     let policyNum = "NEW";
+
     if (policyVal.trim() !== "") {
       policyNum = policyVal.trim().replace(/[^a-z0-9]/gi, '_');
     } else {
-      const savedPolicy = localStorage.getItem("Complx_PolicyNo");
+      const savedPolicy = localStorage.getItem("ILWD_PolicyNo");
       if (savedPolicy && savedPolicy.trim() !== "") {
         policyNum = savedPolicy.trim().replace(/[^a-z0-9]/gi, '_');
       }
     }
 
-    const finalFileName = `${policyNum}_RFC_Policy_Condition.pdf`;
+    const finalFileName = `${policyNum}RFC_PolicyCondition.pdf`;
 
+    // 5. Execute action (View in new tab OR Force Download)
     if (action === 'view') {
       window.open(url, '_blank');
     } else {
@@ -1542,17 +1567,19 @@ async function fillPDF(templateFileName = PDF_FILENAME, action = 'download') {
       link.remove();
     }
 
+    // 6. Clean up Blob URL memory leak after 5 seconds
     setTimeout(() => URL.revokeObjectURL(url), 5000);
 
   } catch (err) {
     console.error("Critical PDF Error:", err);
     alert("PDF generation failed: " + (err.message || err));
   } finally {
+    // Re-enable action buttons
     actionButtons.forEach(btn => btn.disabled = false);
   }
-}
-/* ---------- (END) GENERATE PDF ---------- */
-
+}    
+/* ---------- (END) Generate PDF ---------- */
+    
 /* ---------- RESET ALL DATA ---------- */
 function resetAllData() {
   if (!confirm("Are you sure you want to reset the form? All saved data will be cleared.")) {
