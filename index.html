@@ -925,11 +925,13 @@ a.back-link svg {margin-left: -6px;transform: translateY(0.5px);stroke: #007aff 
         &copy; 2026 CI Pro Universe Portal. All rights reserved. Built for CI Pro operations.
     </footer>   
   
-    <div id="sigModal" class="sig-modal" aria-hidden="true">
+<!-- Signature Modal -->
+<div id="sigModal" class="sig-modal" aria-hidden="true">
   <div class="box">
     <h3 id="sigModalTitle">Draw Signature</h3>
-    <!-- Responsive canvas: internal pixels are set in JS for crispness -->
-    <canvas id="sigCanvas"></canvas>
+    <div class="canvas-wrapper">
+      <canvas id="sigCanvas"></canvas>
+    </div>
     <div class="sig-actions">
       <button id="sigDone" type="button">Done</button>
       <button id="sigClear" type="button" class="ghost">Clear</button>
